@@ -85,3 +85,16 @@ def make_adj_graph(units, membership, inclusion_percent):
             graph = networkx_from_matrix_and_list(contig_matrix.full()[0], contig_matrix.full()[1])
             graph_dict.update({d_geoid:graph})
     return graph_dict
+
+def make_assignment_file(districts, units):
+    assignment = {}
+    perim_assignment = {}
+    for i, dist in districts.iterrows():
+        assignment[dist] = []
+        perim_assignment[dist] = []
+        for j, unit in units.iterrows():
+            if unit.geometry.intersects(dist.geometry):
+                assignment[dist].append(unit["geoid"])
+                if unit.geometry.intersects(dist.geometry.boundary):
+                    perim_assignment[dist].append(unit["geoid"])
+    return (assignment, perim_assignment)
