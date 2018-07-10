@@ -3,7 +3,7 @@ import pandas as pd
 import shapely.wkt
 import networkx as nx
 
-def discrete_perim_and_area(df_dist, df_units, membership, approx_assignment, prorate = False, pop_field = "P0010001"):
+def discrete_perim_and_area(df_dist, df_units, membership, approx_assignment, prorate = True, pop_field = "P0010001"):
     perim = {}
     area = {}
     for i, dist in df_dist.iterrows():
