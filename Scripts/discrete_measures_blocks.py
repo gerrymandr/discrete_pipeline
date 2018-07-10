@@ -3,33 +3,7 @@ import pandas as pd
 import shapely.wkt
 import networkx as nx
 
-def discrete_perim_and_area(df_dist, df_units, membership, pop_field = "P0010001"):
-    perim = {}
-    area = {}
-    for i, dist in df_dist.iterrows():
-        perim[dist["geoid"]] = []
-        #dist_units = membership[dist["geoid"]] used to pull out dictionary with prorate
-        tmp_dperim = 0
-        tmp_dpperim = 0
-
-
-        tmp_darea = 0
-        tmp_dparea = 0
-
-        for j, unit in df_units.iterrows():
-            if unit["geoid"] in membership[dist["geoid"]]:
-                tmp_darea += 1
-                tmp_dparea += unit[pop_field]
-
-                if unit.geometry.intersects(dist.geometry.boundary):
-                    tmp_dperim += 1
-                    tmp_dpperim += unit[pop_field]
-
-        perim[dist["geoid"]] = [tmp_dperim, tmp_dpperim]
-
-        area[dist["geoid"]] = [tmp_darea, tmp_dparea]
-
-    return (perim, area)
+#def discrete_perim_and_area(df_dist, df_units, membership, pop_field = "P0010001"):
 
 UTMS = ["02", "04", "05", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20", "55"]
 

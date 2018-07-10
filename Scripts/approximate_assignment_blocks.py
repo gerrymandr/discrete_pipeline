@@ -4,28 +4,6 @@ import shapely.wkt
 import networkx as nx
 import pysal
 
-def make_membership_dict(districts, units):
-    '''
-    districts: geodataframe of districts with identifier "geoid"
-    units: geodataframe of units with
-
-    code returns membership, a dictionary keyed by geiods of districts, whose values are
-    also dictionaries:
-        membership[district geoid] = {unit geoid : ratio of unit area lying in district}
-    '''
-    membership = {}
-    for i, dist in districts.iterrows():
-        d_geoid = dist["geoid"]
-        membership[d_geoid] = []
-        for j, unit in units.iterrows():
-            u_geoid = unit["geoid"]
-            if unit.geometry.intersects(dist.geometry):
-                #joint_area = (dist.geometry.intersection(unit.geometry)).area #Get intersecting area
-                #percent_inside = joint_area/unit.geometry.area
-                membership[d_geoid].append(unit["geoid"])
-    return membership
-
-
 
 def networkx_from_matrix_and_list(adj, names):
     G = nx.from_numpy_matrix(adj)

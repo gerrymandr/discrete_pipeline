@@ -9,6 +9,53 @@ import geopandas as gpd
 import json
 import time
 
+def discrete_perim_and_area(df_dist, df_units, membership):
+    '''
+    This used to be in discrete_measures_blocks.py
+    '''
+    perim = {}
+    area = {}
+    for i, dist in df_dist.iterrows():
+        perim[dist["geoid"]] = []
+        #dist_units = membership[dist["geoid"]] used to pull out dictionary with prorate
+        tmp_dperim = 0
+        tmp_dpperim = 0
+        tmp_darea = 0
+        tmp_dparea = 0
+
+        for j, unit in df_units.iterrows():
+            if unit["geoid"] in membership[dist["geoid"]]:
+                tmp_darea += 1
+#                tmp_dparea += unit[pop_field]  #uncomment to use population
+                if unit.geometry.intersects(dist.geometry.boundary):
+                    tmp_dperim += 1
+#                    tmp_dpperim += unit[pop_field]  #uncomment to use population
+        perim[dist["geoid"]] = [tmp_dperim, tmp_dpperim]
+        area[dist["geoid"]] = [tmp_darea, tmp_dparea]
+    return (perim, area)
+
+def make_membership_dict(districts, units):
+    '''
+    This used to be in approximate_assignment_blocks.py
+    districts: geodataframe of districts with identifier "geoid"
+    units: geodataframe of units with
+
+    code returns membership, a dictionary keyed by geiods of districts, whose values are
+    also dictionaries:
+        membership[district geoid] = {unit geoid : ratio of unit area lying in district}
+    '''
+    membership = {}
+    for i, dist in districts.iterrows():
+        d_geoid = dist["geoid"]
+        membership[d_geoid] = []
+        for j, unit in units.iterrows():
+            u_geoid = unit["geoid"]
+            if dist.geometry.contains(unit.geometry.representative_point()):
+                #joint_area = (dist.geometry.intersection(unit.geometry)).area #Get intersecting area
+                #percent_inside = joint_area/unit.geometry.area
+                membership[d_geoid].append(unit["geoid"])
+    return membership
+
 def dict_invert(dictionary):
   dict = {val: [key for key in dictionary.keys() if dictionary[key] == val] for val in dictionary.values()}
   return dict
@@ -26,9 +73,8 @@ state_codes = dict_invert({
 })
 
 #Grab Districts
-districts = gpd.GeoDataFrame.from_file('./districting_plans/cd2013/tl_rd13_us_cd113.shp')
-percent_list = [0.5, 0.1]
-unit = "bg"
+districts = gpd.GeoDataFrame.from_file('./sample_data/sample_districts.shp')
+unit = "block"
 
 plan_name = "tigerline"
 districts["geoid"] = districts["GEOID"]
@@ -46,22 +92,27 @@ if unit=="block":
 
     data = {}
 
-    for state in ["44","02"]:#state_codes.keys():
+    #for sample data, put sample_blocks.shp in states/00
+    for state in ["00"]:#state_codes.keys():    #"00" is the name of the state folder for the sample data
         print("state: " + state)
         #initialize_dataframes(state_fips, unit_df, district_df)
         os.chdir('./states/'+state)
 
         #Retrieve GeoDataFrames
-        state_districts = districts.iloc[[districts.iloc[i]['STATEFP'] == state for i in range(len(districts))]]
+        #state_districts = districts.iloc[[districts.iloc[i]['STATEFP'] == state for i in range(len(districts))]]    #uncomment to use on non-sample
+        state_districts = districts   #comment to use for non-sample
         #make sure there exists a lowercase geoid column
         state_districts["geoid"] = state_districts["GEOID"]
+        print(len(state_districts["geoid"]))
 
         for d_geoid in state_districts["geoid"]:
             data[d_geoid] = []
 
-        block_filename = '2010_' + state + '_' + unit + '_pop.shp'
+        #block_filename = '2010_' + state + '_' + unit + '_pop.shp'
+        block_filename = 'sample_blocks.shp'
         state_units = gpd.GeoDataFrame.from_file(block_filename)
-        state_units["geoid"] = state_units["GEOID10"]
+#       state_units["geoid"] = state_units["GEOID10"]
+        state_units["geoid"] = state_units["GEOID"]
 
         #TODO: check if membership has already been computed
         print('working on making membership files')
@@ -69,31 +120,30 @@ if unit=="block":
         with open(state + '_' + unit + '_membership.json', 'w') as fp:
             json.dump(membership, fp)
 
-
-
-
-
             d_perim = {}
             d_area = {}
-
 
             print('working on approximating districts')
 
             ########approx_districts=state_districts
-            with open(state + "_" + unit + "approximated_by_block" +  ".json", "w") as fp:
-                json.dump((approx_districts.to_json(), membership), fp)
+            #with open(state + "_" + unit + "approximated_by_block" +  ".json", "w") as fp:
+            #    json.dump((approx_districts.to_json(), membership), fp)
 
-
+            print(len(state_districts["geoid"]))
             print('computing discrete measures')
-            (perim, area) = discrete_perim_and_area(state_districts, state_units, membership, pop_field = "P0010001")
+#            (perim, area) = discrete_perim_and_area(state_districts, state_units, membership, pop_field = "P0010001")
+            (perim, area) = discrete_perim_and_area(state_districts, state_units, membership)   #use this for no population sample
+
             d_perim.update(perim)
             d_area.update(area)
 
     #note that we're not doing prjections when calculating percent inclusion
-
+            print(len(state_districts["geoid"]))
             for dist_geoid in state_districts["geoid"]:
                 data[dist_geoid].extend(d_perim[dist_geoid])
                 data[dist_geoid].extend(d_area[dist_geoid])
+                print(data[dist_geoid])
+                print('i got here')
         os.chdir("../../")
 
 os.chdir("./tables")
