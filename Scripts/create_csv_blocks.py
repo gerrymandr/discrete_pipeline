@@ -6,6 +6,7 @@ from approximate_assignment_blocks import *
 from discrete_measures_blocks import *
 
 import geopandas as gpd
+import pandas as pd
 import json
 import time
 
@@ -60,6 +61,10 @@ def dict_invert(dictionary):
   dict = {val: [key for key in dictionary.keys() if dictionary[key] == val] for val in dictionary.values()}
   return dict
 
+def csv_to_dict(path):
+    with open(path, mode="r") as f:
+        return dict(csv.reader(f))
+
 state_codes = dict_invert({
     'WA': '53', 'DE': '10', 'DC': '11', 'WI': '55', 'WV': '54', 'HI': '15',
     'FL': '12', 'WY': '56', 'NJ': '34', 'NM': '35', 'TX': '48', 'LA': '22',
@@ -83,68 +88,61 @@ header_list = ["geoid"]
 
 #####
 
+header_list.extend(["dperim", "dpperim"])
+header_list.extend(["darea", "dparea"])
 
-if unit=="block":
+data = {}
 
+#for sample data, put sample_blocks.shp in states/00
+for state in ["00"]:#state_codes.keys():    #"00" is the name of the state folder for the sample data
+    print("state: " + state)
+    #initialize_dataframes(state_fips, unit_df, district_df)
+    os.chdir('./states/'+state)
 
-    header_list.extend(["dperim", "dpperim"])
-    header_list.extend(["darea", "dparea"])
+    #Retrieve GeoDataFrames
+    #state_districts = districts.iloc[[districts.iloc[i]['STATEFP'] == state for i in range(len(districts))]]    #uncomment to use on non-sample
+    state_districts = districts   #comment to use for non-sample
+    #make sure there exists a lowercase geoid column
+    state_districts["geoid"] = state_districts["GEOID"]
 
-    data = {}
+    for d_geoid in state_districts["geoid"]:
+        data[d_geoid] = []
 
-    #for sample data, put sample_blocks.shp in states/00
-    for state in ["00"]:#state_codes.keys():    #"00" is the name of the state folder for the sample data
-        print("state: " + state)
-        #initialize_dataframes(state_fips, unit_df, district_df)
-        os.chdir('./states/'+state)
-
-        #Retrieve GeoDataFrames
-        #state_districts = districts.iloc[[districts.iloc[i]['STATEFP'] == state for i in range(len(districts))]]    #uncomment to use on non-sample
-        state_districts = districts   #comment to use for non-sample
-        #make sure there exists a lowercase geoid column
-        state_districts["geoid"] = state_districts["GEOID"]
-        print(len(state_districts["geoid"]))
-
-        for d_geoid in state_districts["geoid"]:
-            data[d_geoid] = []
-
-        #block_filename = '2010_' + state + '_' + unit + '_pop.shp'
-        block_filename = 'sample_blocks.shp'
-        state_units = gpd.GeoDataFrame.from_file(block_filename)
+    #block_filename = '2010_' + state + '_' + unit + '_pop.shp'
+    block_filename = 'sample_blocks.shp'
+    state_units = gpd.GeoDataFrame.from_file(block_filename)
 #       state_units["geoid"] = state_units["GEOID10"]
-        state_units["geoid"] = state_units["GEOID"]
+    state_units["geoid"] = state_units["GEOID"]
 
-        #TODO: check if membership has already been computed
-        print('working on making membership files')
-        membership = make_membership_dict(state_districts, state_units)
-        with open(state + '_' + unit + '_membership.json', 'w') as fp:
-            json.dump(membership, fp)
+    #TODO: check if membership has already been computed
+    print('working on making membership files')
+    t0 = time.time()
+    block_assignment_path = "../../sample_data/assignment.csv"
+    block_assignment = csv_to_dict(block_assignment_path)
+    membership = dict_invert(block_assignment)
+    print("loading membership files took: " + str(int(time.time()-t0)) + " seconds")
 
-            d_perim = {}
-            d_area = {}
+    d_perim = {}
+    d_area = {}
 
-            print('working on approximating districts')
+        ########approx_districts=state_districts
+        #with open(state + "_" + unit + "approximated_by_block" +  ".json", "w") as fp:
+        #    json.dump((approx_districts.to_json(), membership), fp)
 
-            ########approx_districts=state_districts
-            #with open(state + "_" + unit + "approximated_by_block" +  ".json", "w") as fp:
-            #    json.dump((approx_districts.to_json(), membership), fp)
-
-            print(len(state_districts["geoid"]))
-            print('computing discrete measures')
+    print('computing discrete measures')
 #            (perim, area) = discrete_perim_and_area(state_districts, state_units, membership, pop_field = "P0010001")
-            (perim, area) = discrete_perim_and_area(state_districts, state_units, membership)   #use this for no population sample
+    t0 = time.time()
+    (perim, area) = discrete_perim_and_area(state_districts, state_units, membership)   #use this for no population sample
+    print("computing discrete measures took: " + str(int(time.time()-t0)) + " seconds")
 
-            d_perim.update(perim)
-            d_area.update(area)
+    d_perim.update(perim)
+    d_area.update(area)
 
-    #note that we're not doing prjections when calculating percent inclusion
-            print(len(state_districts["geoid"]))
-            for dist_geoid in state_districts["geoid"]:
-                data[dist_geoid].extend(d_perim[dist_geoid])
-                data[dist_geoid].extend(d_area[dist_geoid])
-                print(data[dist_geoid])
-                print('i got here')
-        os.chdir("../../")
+#note that we're not doing prjections when calculating percent inclusion
+    for dist_geoid in state_districts["geoid"]:
+        data[dist_geoid].extend(d_perim[dist_geoid])
+        data[dist_geoid].extend(d_area[dist_geoid])
+    os.chdir("../../")
 
 os.chdir("./tables")
 #save_d_data(data, name, path)
