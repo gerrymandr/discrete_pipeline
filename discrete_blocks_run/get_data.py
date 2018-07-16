@@ -107,7 +107,9 @@ def get_block_data(fip):
 
     print("finished blocks" + str(int(time.time()-t0)) + " seconds")
 
-    os.chdir("..")
+    os.chdir("../..")
 
 
-get_block_data("44")
+for i in ["33", "15"]:
+    print(os.getcwd())
+    get_block_data(i)
