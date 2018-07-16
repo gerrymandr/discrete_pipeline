@@ -10,7 +10,7 @@ import threading
 import psutil
 import time
 
-
+t0 = time.time()
 def discrete_perim_and_area(df_dist, df_units, membership):
     '''
     This used to be in discrete_measures_blocks.py
@@ -27,14 +27,14 @@ def discrete_perim_and_area(df_dist, df_units, membership):
         tmp_dparea = 0
 
         for j, unit in df_units.iterrows():
-            
+
             if unit["geoid"] in membership[dist["geoid"]]:
                 tmp_darea += 1
                 tmp_dparea += int(unit["P0010001"])  #uncomment to use population
                 if unit.geometry.intersects(dist.geometry.boundary):
                     tmp_dperim += 1
                     tmp_dpperim += int(unit["P0010001"])  #uncomment to use pop
-                    
+
         perim[dist["geoid"]] = [tmp_dperim, tmp_dpperim]
         area[dist["geoid"]] = [tmp_darea, tmp_dparea]
         print("finished computing for district: " + dist["geoid"])
@@ -47,7 +47,7 @@ def dict_invert(dictionary, padding=""):
     inverted = {}
     for val in set(dictionary.values()):
         inverted.update({padding+val:[]})
-    
+
     for key in dictionary.keys():
         inverted[padding+dictionary[key]].append(key)
     return inverted
@@ -158,6 +158,7 @@ def compute_measures(state):
         for d_geoid in data.keys():
             metric_writer.writerow([d_geoid,*data[d_geoid]])
     print("finished saving " + state)
+    os.chdir("../")
 
 def threaded_states(state_queue):
     # the queue of statess that still need to be checked
@@ -173,7 +174,7 @@ def threaded_states(state_queue):
                 break
             else:
                 compute_measures(statex)
-                
+
     threads = []
     while state_queue:
         # If there the state list is not empty proceed:
@@ -204,5 +205,19 @@ def threaded_states(state_queue):
 # You call this like this
 # threaded_states(["00", "01", "02"])
 # threaded_states(["01"])
-compute_measures("44")
-print("done")
+states1 = ['53', '10', '11', '55','54','15',
+    '12', '56', '34', '35', '48', '22',
+    '37', '38', '31', '47', '36', '42',
+    '02', '32', '33', '51', '08', '06']
+
+states2 = ['01', '05', '50', '17', '13', '18',
+    '19', '25', '04', '16', '09', '23',
+    '24', '40', '39', '49', '29', '27',
+    '26', '44', '20', '30', '28', '45',
+    '21', '41', '46']
+
+for i in states1:
+    print(os.getcwd())
+    compute_measures(i)
+    print("done fips: "+i)
+    print(str(t0-time.time()))
