@@ -43,16 +43,25 @@ def compute_measures(state, districts, unit):
         state_districts["geoid"] = state_districts["GEOID"]
     for d_geoid in state_districts["geoid"]:
         data[d_geoid] = []
-
+    state_districts.crs = {'init': 'epsg:2163'}
+    
     unit_filename = '2010_' + state + '_' + unit + '_pop.shp'
     state_units = gpd.GeoDataFrame.from_file(unit_filename)
     state_units["geoid"] = state_units["GEOID10"]
+    state_units.crs = {'init': 'epsg:2163'}
 
     #TODO: check if membership has already been computed
-    print('working on making membership files')
-    membership = make_membership_dict(state_districts, state_units)
-    with open(state + '_' + unit + '_membership_percentages.json', 'w') as fp:
-        json.dump(membership, fp)
+    print('looking for membership files')
+    mem_file_name = state+ "_" + unit + "_membership_percentages.json"
+    try:
+        with open(mem_file_name) as json_data:
+            membership = json.load(json_data)
+            print("found membership files!")
+    except:
+        print("failed to find existing membership files, making new ones")
+        membership = make_membership_dict(state_districts, state_units)
+        with open(state + '_' + unit + '_membership_percentages.json', 'w') as fp:
+            json.dump(membership, fp)
 
     for inclusion_percent in percent_list:
         #TODO: make_data(membership, units_df, districts) - maybe make this a class?
@@ -60,13 +69,17 @@ def compute_measures(state, districts, unit):
         d_area = {}
         perc = str(inclusion_percent*100)
 
-        #TODO: check if already exists
-        print('working on approximating districts')
-        (approx_districts, approx_assignment) = make_approx_geometries(state_units, membership, inclusion_percent)
-        with open(state + "_" + unit + "_approx_" + perc + ".json", "w") as fp:
-            json.dump((approx_districts.to_json(), approx_assignment), fp)
+        approx_file = state + "_" + unit + "_approx_" + perc + ".json"
+        try:
+            with open(approx_file) as json_data:
+                (approx_districts, approx_assignment) = json.load(json_data)
+                print("I found some approximated districts! Using them...")
+        except:
+            print("No approximated data found... working on approximating districts")
+            (approx_districts, approx_assignment) = make_approx_geometries(state_units, membership, inclusion_percent)
+            with open(state + "_" + unit + "_approx_" + perc + ".json", "w") as fp:
+                json.dump((approx_districts.to_json(), approx_assignment), fp)
 
-        #TODO: check if already exists
         print('computing discrete measures')
         (perim, area) = discrete_perim_and_area(state_districts, state_units, membership, approx_assignment, prorate = True, pop_field = "P0010001")
         d_perim.update(perim)
@@ -96,8 +109,6 @@ def compute_measures(state, districts, unit):
                                    quotechar='|', quoting=csv.QUOTE_MINIMAL)
         metric_writer.writerow(header_list)
         for d_geoid in data.keys():
-            print(carea[d_geoid])
-            print(type(carea[d_geoid]))
             metric_writer.writerow([d_geoid, carea[d_geoid], cperim[d_geoid], *data[d_geoid]])
 
 
@@ -113,7 +124,7 @@ states = ['53', '10', '11', '55','54',
           '23', '24', '40', '39', '49',
           '29', '27', '26', '44', '20',
           '30', '28', '45', '21', '41', '46']
-for i in states:
+for i in ["01"]:#states:
     print(os.getcwd())
     compute_measures(i, dist_df, "tract")
     print("done fips: "+i)
