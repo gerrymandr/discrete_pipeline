@@ -105,6 +105,7 @@ def get_unit_data(fip, unit_name):
 
     #uname is an abbreviation for naming conventions only.
     if unit_name == "block group":
+        unit_url = "https://www2.census.gov/geo/tiger/TIGER2010/BG/2010/tl_2010_" + fip + "_bg10.zip"             #2010 tigerline block groups shapefile
         uname = "bg"
     else:
         uname = unit_name
@@ -135,5 +136,5 @@ states = ['53', '10', '11', '55','54',
           '30', '28', '45', '21', '41', '46']
 for i in states:
     print(os.getcwd())
-    get_unit_data(i, "tract")
+    get_unit_data(i, "block group")
     print("done fips: "+i)
