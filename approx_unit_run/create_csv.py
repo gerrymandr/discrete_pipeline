@@ -44,7 +44,7 @@ def compute_measures(state, districts, unit):
     for d_geoid in state_districts["geoid"]:
         data[d_geoid] = []
     state_districts.crs = {'init': 'epsg:2163'}
-    
+
     unit_filename = '2010_' + state + '_' + unit + '_pop.shp'
     state_units = gpd.GeoDataFrame.from_file(unit_filename)
     state_units["geoid"] = state_units["GEOID10"]
@@ -110,7 +110,7 @@ def compute_measures(state, districts, unit):
         metric_writer.writerow(header_list)
         for d_geoid in data.keys():
             metric_writer.writerow([d_geoid, carea[d_geoid], cperim[d_geoid], *data[d_geoid]])
-
+    os.chdir("../")
 
 dist_df = gpd.GeoDataFrame.from_file("./districting_plans/cd2013/"
                                            + "tl_rd13_us_cd113.shp")
@@ -124,7 +124,9 @@ states = ['53', '10', '11', '55','54',
           '23', '24', '40', '39', '49',
           '29', '27', '26', '44', '20',
           '30', '28', '45', '21', '41', '46']
+states = sorted(states)
 for i in states:
     print(os.getcwd())
-    compute_measures(i, dist_df, "tract")
+    # the last argument here should be "bg" or "tract"
+    compute_measures(i, dist_df, "bg")
     print("done fips: "+i)

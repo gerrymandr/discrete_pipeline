@@ -134,7 +134,9 @@ states = ['53', '10', '11', '55','54',
           '23', '24', '40', '39', '49',
           '29', '27', '26', '44', '20',
           '30', '28', '45', '21', '41', '46']
+states = sorted(states)
 for i in states:
     print(os.getcwd())
+    # the last input here should be "block group" or "tract"
     get_unit_data(i, "block group")
     print("done fips: "+i)
