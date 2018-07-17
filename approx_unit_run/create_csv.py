@@ -34,7 +34,7 @@ def compute_measures(state, districts, unit):
 
     #initialize_dataframes(state_fips, unit_df, district_df)
     os.chdir('./states/'+state)
-    
+
     #Retrieve GeoDataFrames
     state_ind = [districts.iloc[i]['STATEFP'] == state
                  for i in range(len(districts))]
@@ -43,38 +43,38 @@ def compute_measures(state, districts, unit):
         state_districts["geoid"] = state_districts["GEOID"]
     for d_geoid in state_districts["geoid"]:
         data[d_geoid] = []
-    
+
     unit_filename = '2010_' + state + '_' + unit + '_pop.shp'
     state_units = gpd.GeoDataFrame.from_file(unit_filename)
     state_units["geoid"] = state_units["GEOID10"]
-    
+
     #TODO: check if membership has already been computed
     print('working on making membership files')
     membership = make_membership_dict(state_districts, state_units)
     with open(state + '_' + unit + '_membership_percentages.json', 'w') as fp:
         json.dump(membership, fp)
-        
+
     for inclusion_percent in percent_list:
         #TODO: make_data(membership, units_df, districts) - maybe make this a class?
         d_perim = {}
         d_area = {}
         perc = str(inclusion_percent*100)
-        
+
         #TODO: check if already exists
         print('working on approximating districts')
-        (approx_districts, approx_assignment) = make_approx_geometries(state_units, membership, inclusion_percent)        
+        (approx_districts, approx_assignment) = make_approx_geometries(state_units, membership, inclusion_percent)
         with open(state + "_" + unit + "_approx_" + perc + ".json", "w") as fp:
             json.dump((approx_districts.to_json(), approx_assignment), fp)
 
         #TODO: check if already exists
-        print('computing discrete measures')            
+        print('computing discrete measures')
         (perim, area) = discrete_perim_and_area(state_districts, state_units, membership, approx_assignment, prorate = True, pop_field = "P0010001")
         d_perim.update(perim)
         d_area.update(area)
-    
+
         carea = {}
         cperim = {}
-        
+
         for dist_geoid in state_districts["geoid"]:
             #data[dist_geoid].extend([carea[dist_geoid],cperim[dist_geoid]])
             data[dist_geoid].extend(d_perim[dist_geoid])
@@ -103,4 +103,17 @@ def compute_measures(state, districts, unit):
 
 dist_df = gpd.GeoDataFrame.from_file("./districting_plans/cd2013/"
                                            + "tl_rd13_us_cd113.shp")
-compute_measures("15", dist_df, "tract")
+states = ['53', '10', '11', '55','54',
+          '15', '12', '56', '34', '35',
+          '48', '22', '37', '38', '31',
+          '47', '36', '42', '02', '32',
+          '33', '51', '08', '06', '01',
+          '05', '50', '17', '13', '18',
+          '19', '25', '04', '16', '09',
+          '23', '24', '40', '39', '49',
+          '29', '27', '26', '44', '20',
+          '30', '28', '45', '21', '41', '46']
+for i in states:
+    print(os.getcwd())
+    compute_measures(i, dist_df, "tract")
+    print("done fips: "+i)
