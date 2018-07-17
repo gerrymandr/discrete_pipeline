@@ -63,7 +63,7 @@ def compute_measures(state, districts, unit):
         #TODO: check if already exists
         print('working on approximating districts')
         (approx_districts, approx_assignment) = make_approx_geometries(state_units, membership, inclusion_percent)        
-        with open(state + "_" + unit + "approximated_by_" + perc + ".json", "w") as fp:
+        with open(state + "_" + unit + "_approx_" + perc + ".json", "w") as fp:
             json.dump((approx_districts.to_json(), approx_assignment), fp)
 
         #TODO: check if already exists
