@@ -124,7 +124,7 @@ states = ['53', '10', '11', '55','54',
           '23', '24', '40', '39', '49',
           '29', '27', '26', '44', '20',
           '30', '28', '45', '21', '41', '46']
-for i in ["01"]:#states:
+for i in states:
     print(os.getcwd())
     compute_measures(i, dist_df, "tract")
     print("done fips: "+i)
