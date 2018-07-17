@@ -52,7 +52,7 @@ def compute_measures(state, districts, unit):
 
     #TODO: check if membership has already been computed
     print('looking for membership files')
-    mem_file_name = state+ "_" + unit + "_membership_percentages.json"
+    mem_file_name = plan_name + "_" + state + "_" + unit + "_membership_percentages.json"
     try:
         with open(mem_file_name) as json_data:
             membership = json.load(json_data)
@@ -69,7 +69,7 @@ def compute_measures(state, districts, unit):
         d_area = {}
         perc = str(inclusion_percent*100)
 
-        approx_file = state + "_" + unit + "_approx_" + perc + ".json"
+        approx_file = plan_name + "_" + state + "_" + unit + "_approx_" + perc + ".json"
         try:
             with open(approx_file) as json_data:
                 (approx_districts, approx_assignment) = json.load(json_data)
