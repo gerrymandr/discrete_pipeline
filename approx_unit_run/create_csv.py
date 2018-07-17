@@ -18,9 +18,8 @@ def dict_invert(dictionary):
   dict = {val: [key for key in dictionary.keys() if dictionary[key] == val] for val in dictionary.values()}
   return dict
 
-def compute_measures(state, districts, unit):
+def compute_measures(state, districts, unit, plan_name):
     percent_list = [0.5, 0.1]
-    plan_name = "tigerline"
 
     header_list = ["geoid"]
     header_list.extend(["carea", "cperim"])
@@ -112,8 +111,6 @@ def compute_measures(state, districts, unit):
             metric_writer.writerow([d_geoid, carea[d_geoid], cperim[d_geoid], *data[d_geoid]])
     os.chdir("../")
 
-dist_df = gpd.GeoDataFrame.from_file("./districting_plans/cd2013/"
-                                           + "tl_rd13_us_cd113.shp")
 states = ['53', '10', '11', '55','54',
           '15', '12', '56', '34', '35',
           '48', '22', '37', '38', '31',
@@ -125,8 +122,23 @@ states = ['53', '10', '11', '55','54',
           '29', '27', '26', '44', '20',
           '30', '28', '45', '21', '41', '46']
 states = sorted(states)
+
+# TORUN: uncomment one of the dist_df lines before depending on the shapefile to use,
+#        change the third and last argument in compute_measures at the end of this file
+
+# for tigerline
+#dist_df = gpd.GeoDataFrame.from_file("./districting_plans/cd2013/tl_rd13_us_cd113.shp")
+# zoom level orders: 500k most granular (most precise), then 5m, then 20m (very coarse)
+# for cb500k
+#dist_df = gpd.GeoDataFrame.from_file("./districting_plans/cb_2013_us_cd113_500k/cb_2013_us_cd113_500k.shp")
+# for cb5m
+#dist_df = gpd.GeoDataFrame.from_file("./districting_plans/cb_2013_us_cd113_5m/cb_2013_us_cd113_5m.shp")
+# for cb20m
+dist_df = gpd.GeoDataFrame.from_file("./districting_plans/cb_2013_us_cd113_20m/cb_2013_us_cd113_20m.shp")
+
 for i in states:
     print(os.getcwd())
-    # the last argument here should be "bg" or "tract"
-    compute_measures(i, dist_df, "bg")
+    # the third argument here should be "bg" or "tract"
+    # the last argument should be "tigerline","cb500k", "cb5m", or "cb20m"
+    compute_measures(i, dist_df, "bg", "cb20m")
     print("done fips: "+i)
