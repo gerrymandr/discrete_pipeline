@@ -14,6 +14,7 @@ for unit in unit_name:
 
         # to add continuous polsby popper:
         df["cpolsby"] = (4 * math.pi * df["carea"]) / (df["cperim"] * df["cperim"])
+        df["rank_cpolsby"] = df["cpolsby"].rank()
 
         percent_list = ["0.5", "0.1"]
         for percent in percent_list:
@@ -28,5 +29,12 @@ for unit in unit_name:
             df["rank_dpop_polsby_pro_" + percent] = df["dpop_polsby_pro_" + percent].rank()
 
         #df = df[['geoid', 'carea', 'cpolsbypop', 'dperim_0.5', 'dpperim_0.5', 'dperim_pro_0.5', 'dpperim_pro_0.5', 'darea_0.5', 'dparea_0.5', 'darea_pro_0.5', 'dparea_pro_0.5', 'dperim_0.1', 'dpperim_0.1', 'dperim_pro_0.1', 'dpperim_pro_0.1', 'darea_0.1', 'dparea_0.1', 'darea_pro_0.1', 'dparea_pro_0.1', 'cpolsby', 'dpolsby_0.5', 'dpolsby_01', 'dpolsby_pro_0.5', 'dpolsby_pro_0.1', 'dpop_polsby_0.5', 'dpop_polsby_0.1', 'dpop_polsby_pro_0.5', 'dpop_polsby_pro_0.1']]
-        df.to_csv("./tables_merged/" + shape + "_" + unit + ".csv")
+
+        #df.to_csv("./tables_merged/" + shape + "_" + unit + ".csv")
+
+
+unit = "bg"
+file = "tigerline"
+plot_df = pd.read_csv("./tables_merged/" + file + "_" + unit + ".csv")
+plot_df.plot(x="rank_dpolsby_0.1", y="rank_dpolsby_pro_0.1", title = "Scores for " + unit + "'s from: " + file, kind = 'scatter')
 
