@@ -51,9 +51,8 @@ def on_pick(event):
     # print the geoid selected
     print(geoids[ind[0]])
     # selected keeps track of selected points. starts off as invisible
-    selected.set_visible(True)
-    selected.set_data([xdata[ind]], [ydata[ind]])
-
+    selected1.set_visible(True)
+    selected1.set_data([xdata[ind]], [ydata[ind]])
     # x_df is the dataframe I use to plot the district
     x_df = gpd.read_file("./districting_plans/cb_2013_us_cd113_500k/" +
                          "cb_2013_us_cd113_500k.shp")
@@ -63,12 +62,13 @@ def on_pick(event):
         else:
             # draws the map that happens when you click a point
             drawmap(selected_geoid, x_df)
-    fig.canvas.draw()
+    f.canvas.draw()
 
 
 def drawmap(geoid, df):
     # create a new figure
-    fig2, ax2 = plt.subplots()
+    # fig2, ax2 = plt.subplots()
+    ax4.clear()
     patchdict = {}
     for i, dist in df.iterrows():
         if dist["GEOID"] == geoid:
@@ -80,11 +80,11 @@ def drawmap(geoid, df):
             patch = PolygonPatch(dist.geometry, fc='#D3D3D3',
                                  ec='#D3D3D3', alpha=1, zorder=2)
             patchdict.update({i: patch})
-            ax2.add_patch(patch)
-            ax2.axis('scaled')
-    ax2.add_patch(special_patch)
-    ax2.axis('scaled')
-    plt.title("district " + str(int(geoid[2:])) + " in " +
+            ax4.add_patch(patch)
+            ax4.axis('scaled')
+    ax4.add_patch(special_patch)
+    ax4.axis('scaled')
+    ax4.set_title("district " + str(int(geoid[2:])) + " in " +
               fips_dict[geoid[:2]])
     plt.draw()
 
@@ -99,6 +99,29 @@ ytable_name = "tigerline_bg.csv"
 (x, y, geoids) = different_table_plot(xtable_name, ytable_name,
                                       xvec, yvec)
 
+# row and column sharing
+f, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2, 2)
+
+selected1 = ax1.plot(0, 0, 'o', ms=12, alpha=1, color='yellow', visible=False)[0]
+
+ax1.plot(x, y, 'o', picker=10)  # larger picker = easier to select point
+ax1.set_title("Scatter plot of " + xvec + " and " + yvec)
+ax1.set_ylabel(ytable_name + " : " + yvec)
+ax1.set_xlabel(xtable_name + " : " + xvec)
+
+ax1.plot(x, y, 'o', picker=10)  # larger picker = easier to select point
+ax1.set_title("Scatter plot of " + xvec + " and " + yvec)
+ax1.set_ylabel(ytable_name + " : " + yvec)
+ax1.set_xlabel(xtable_name + " : " + xvec)
+
+ax1.plot(x, y, 'o', picker=10)  # larger picker = easier to select point
+ax1.set_title("Scatter plot of " + xvec + " and " + yvec)
+ax1.set_ylabel(ytable_name + " : " + yvec)
+ax1.set_xlabel(xtable_name + " : " + xvec)
+
+f.canvas.mpl_connect('pick_event', on_pick)
+
+'''
 fig, ax = plt.subplots()
 selected = ax.plot(0, 0, 'o', ms=12, alpha=1, color='yellow', visible=False)[0]
 
@@ -108,3 +131,4 @@ plt.ylabel(ytable_name + " : " + yvec)
 plt.xlabel(xtable_name + " : " + xvec)
 fig.canvas.mpl_connect('pick_event', on_pick)
 plt.show()
+'''
