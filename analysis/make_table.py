@@ -123,8 +123,23 @@ result_pro = result[contin + rank1 + rank1p + rank2 + rank2p +
                     score1 + score1p + score2 + score2p +
                     perim1 + perim1p + perim2 + perim2p +
                     area1 + area1p + area2 + area2p]
+
 result_nopro.to_csv("./big_table.csv")      # length 54
 result_pro.to_csv("./big_table_pro.csv")    # length 86 because 54+32 for prorated
+
+header = ['', '', 'CONTINUOUS:', 'CONTINUOUS:',  'CONTINUOUS SCORE:', 'CONTINUOUS RANK:', 
+           'POP RANK:', 'POP RANK:', 'POP RANK:', 'POP RANK:', 'POP RANK:', 'POP RANK:',
+           'RANKING:', 'RANKING:', 'RANKING:', 'RANKING:', 'RANKING:', 'RANKING:',
+           'POP SCORE:', 'POP SCORE:', 'POP SCORE:', 'POP SCORE:', 'POP SCORE:', 'POP SCORE:',
+           'SCORE:', 'SCORE:', 'SCORE:', 'SCORE:', 'SCORE:', 'SCORE:',
+           'PERIM:', 'PERIM:', 'PERIM:', 'PERIM:', 'PERIM:', 'PERIM:',
+           'POP PERIM:', 'POP PERIM:', 'POP PERIM:', 'POP PERIM:', 'POP PERIM:', 'POP PERIM:',
+           'AREA:', 'AREA:', 'AREA:', 'AREA:', 'AREA:', 'AREA:',
+           'POP AREA:', 'POP AREA:', 'POP AREA:', 'POP AREA:', 'POP AREA:', 'POP AREA:']
+result_nopro.columns = pd.MultiIndex.from_tuples(list(zip(header, result_nopro.columns)))
+
+result_nopro.to_csv("./stylized/style_big_table.csv")      # length 54
+result_pro.to_csv("./stylized/style_big_table_pro.csv")    # length 86 because 54+32 for prorated
 
 # richard's table has 48 columns
 # ours (without prorated) has 54 because 48 + 4 for contin + 1 for geoid + 1 for state

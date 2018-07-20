@@ -60,18 +60,20 @@ df = df.merge(tiger_plan, left_on = "geoid", right_on = "GEOID").merge(
                         cb20_plan, left_on = "geoid", right_on = "GEOID")
 
 # Add rankings of land and water
-rank = []
+rank_land = []
+rank_water = []
 for i in ["tiger", "cb500k", "cb5m", "cb20m"]:
     df["rank_" + i + "_aland"] = df[i + "_aland"].rank(ascending = False)
     df["rank_" + i + "_awater"] = df[i + "_awater"].rank(ascending = False)
-    rank = rank + ['rank_' + i + '_aland', 'rank_' + i + '_awater']
+    rank_land = rank_land + ['rank_' + i + '_aland']
+    rank_water = rank_water + ['rank_' + i + '_awater']
 
 # Reoder the columns
 df = df[['geoid', 'state', 
          'tiger_rank_c_4pi*a/p^2', '500k_rank_c_4pi*a/p^2', '5m_rank_c_4pi*a/p^2', '20m_rank_c_4pi*a/p^2',
          'tiger_c_4pi*a/p^2', '500k_c_4pi*a/p^2', '5m_c_4pi*a/p^2', '20m_c_4pi*a/p^2',
          'tiger_c_perim', '500k_c_perim', '5m_c_perim', '20m_c_perim',
-         'tiger_c_area', '500k_c_area', '5m_c_area', '20m_c_area'] + rank + [
+         'tiger_c_area', '500k_c_area', '5m_c_area', '20m_c_area'] + rank_land + rank_water + [
          'tiger_aland', 'tiger_awater',
          'cb500k_aland', 'cb500k_awater',
          'cb5m_aland', 'cb5m_awater',
@@ -79,3 +81,15 @@ df = df[['geoid', 'state',
 
 # Write new table to CSV
 df.to_csv("./zoom_table.csv")  
+
+header = ['', '', 'CONTIN RANK:', 'CONTIN RANK:', 'CONTIN RANK:', 'CONTIN RANK:',
+           'CONTIN SCORE:', 'CONTIN SCORE:', 'CONTIN SCORE:', 'CONTIN SCORE:', 
+           'CONTIN PERIM:', 'CONTIN PERIM:', 'CONTIN PERIM:', 'CONTIN PERIM:', 
+           'CONTIN AREA:', 'CONTIN AREA:', 'CONTIN AREA:', 'CONTIN AREA:', 
+           'RANK LAND:', 'RANK LAND:', 'RANK LAND:', 'RANK LAND:',
+           'RANK WATER:', 'RANK WATER:', 'RANK WATER:', 'RANK WATER:',
+           'LAND', 'WATER', 'LAND', 'WATER', 'LAND', 'WATER', 'LAND', 'WATER']
+df.columns = pd.MultiIndex.from_tuples(list(zip(header, df.columns)))
+
+df.to_csv("./stylized/style_zoom_table.csv")
+
