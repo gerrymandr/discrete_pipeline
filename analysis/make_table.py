@@ -3,50 +3,53 @@ import pandas as pd
 abbreviations, and reorders the columns. Creates 2 new csvs, big_table and big_table_pro. 
 The first does not have prorated values, the second does. '''
 
-# only creating the big table for tigerline
+# leading in and changing column names of all 8 files (4 zooms, 2 units)
 unit_name = ["tract", "bg"]
-for unit in unit_name:
+files = ["tigerline", "cb500k", "cb5m", "cb20m"]
 
-    # create (g) and (t) labels for column names
-    if(unit == "tract"):
-        u = " (t) "
-    if(unit == "bg"):
-        u = " (g) "
-
-    # read in the tigerline shapefiles (separate for each unit)
-    df = pd.read_csv("./tables_merged/tigerline_" + unit + ".csv", dtype={"geoid": str})
-
-    # change the names of the columns to be dependnet on the unit and the percent
-    percent_list = ["0.5", "0.1"]
-    for percent in percent_list:
-        # using richard's column labels
-        df = df.rename(columns={"dpolsby_" + percent: "a/p^2" + u + percent,
-                                "dpolsby_pro_" + percent: "pro_a/p^2" + u + percent,
-                                "dpop_polsby_" + percent: "w_a/p^2" + u + percent,
-                                "dpop_polsby_pro_" + percent: "pro_w_a/p^2" + u + percent,
-                                "rank_dpolsby_" + percent: "rank_a/p^2" + u + percent,
-                                "rank_dpolsby_pro_" + percent: "rank_pro_a/p^2" + u + percent,
-                                "rank_dpop_polsby_" + percent: "rank_w_a/p^2" + u + percent,
-                                "rank_dpop_polsby_pro_" + percent: "rank_pro_w_a/p^2" + u + percent,
-                                'dperim_' + percent: 'perim' + u + percent,
-                                'dpperim_' + percent: 'w_perim' + u + percent,
-                                'dperim_pro_' + percent: 'pro_perim' + u + percent,
-                                'dpperim_pro_' + percent: 'pro_w_perim' + u + percent,
-                                'darea_' + percent: 'area' + u + percent,
-                                'dparea_' + percent: 'w_area' + u + percent,
-                                'darea_pro_' + percent: 'pro_area' + u + percent,
-                                'dparea_pro_' + percent: 'pro_w_area' + u + percent})
-
-    # change continuous names, which aren't dependent on percent or unit
-    df = df.rename(columns={'carea': 'c_area', 'cperim': 'c_perim',
-                            'cpolsby': 'c_a/p^2', 'rank_cpolsby': 'rank_c_a/p^2'})
-
-    # save the relabelled files in their respective new csvs
-    df.to_csv("./tables_merged/tigerline_new_" + unit + ".csv")
+for shape in files:
+    for unit in unit_name:
+    
+        # create (g) and (t) labels for column names
+        if(unit == "tract"):
+            u = " (t) "
+        if(unit == "bg"):
+            u = " (g) "
+    
+        # read in the tigerline shapefiles (separate for each unit)
+        df = pd.read_csv("./tables_merged/" + shape + "_" + unit + ".csv", dtype={"geoid": str})
+    
+        # change the names of the columns to be dependnet on the unit and the percent
+        percent_list = ["0.5", "0.1"]
+        for percent in percent_list:
+            # using richard's column labels
+            df = df.rename(columns={"dpolsby_" + percent: "a/p^2" + u + percent,
+                                    "dpolsby_pro_" + percent: "pro_a/p^2" + u + percent,
+                                    "dpop_polsby_" + percent: "w_a/p^2" + u + percent,
+                                    "dpop_polsby_pro_" + percent: "pro_w_a/p^2" + u + percent,
+                                    "rank_dpolsby_" + percent: "rank_a/p^2" + u + percent,
+                                    "rank_dpolsby_pro_" + percent: "rank_pro_a/p^2" + u + percent,
+                                    "rank_dpop_polsby_" + percent: "rank_w_a/p^2" + u + percent,
+                                    "rank_dpop_polsby_pro_" + percent: "rank_pro_w_a/p^2" + u + percent,
+                                    'dperim_' + percent: 'perim' + u + percent,
+                                    'dpperim_' + percent: 'w_perim' + u + percent,
+                                    'dperim_pro_' + percent: 'pro_perim' + u + percent,
+                                    'dpperim_pro_' + percent: 'pro_w_perim' + u + percent,
+                                    'darea_' + percent: 'area' + u + percent,
+                                    'dparea_' + percent: 'w_area' + u + percent,
+                                    'darea_pro_' + percent: 'pro_area' + u + percent,
+                                    'dparea_pro_' + percent: 'pro_w_area' + u + percent})
+    
+        # change continuous names, which aren't dependent on percent or unit
+        df = df.rename(columns={'carea': 'c_area', 'cperim': 'c_perim',
+                                'cpolsby': 'c_a/p^2', 'rank_cpolsby': 'rank_c_a/p^2'})
+    
+        # save the relabelled files in their respective new csvs
+        df.to_csv("./tables_merged/" + shape + "_" + unit + ".csv")    
 
 # read in the tract and block group cvs that were just created (this could be avoided but it's ok)
-tract = pd.read_csv("./tables_merged/tigerline_new_tract.csv", dtype={"geoid": str})
-bg = pd.read_csv("./tables_merged/tigerline_new_bg.csv", dtype={"geoid": str})
+tract = pd.read_csv("./tables_merged/tigerline_tract.csv", dtype={"geoid": str})
+bg = pd.read_csv("./tables_merged/tigerline_bg.csv", dtype={"geoid": str})
 
 # merge tracts to block groups by geoid
 tract_bg = tract.merge(bg, left_on = "geoid", right_on = "geoid")
@@ -109,12 +112,12 @@ for i in result['geoid']:
     abbrev.append(fips_dict[i[:2]])
 result['state'] = abbrev
 
-# There are 3 "districts" that are only water, with geoid ending in "ZZ". Removing these
-result.drop(result.index[[211, 84, 151]], inplace=True)
+result.sort_values('geoid', inplace=True)
 result = result.reset_index(drop=True)
 
 # create two csvs: one with prorated values, one without
-contin = ['geoid', 'state', 'c_perim', 'c_area', 'c_a/p^2', 'rank_c_a/p^2']
+result = result.rename(columns={'c_a/p^2': 'c_4pi*a/p^2', 'rank_c_a/p^2': 'rank_c_4pi*a/p^2'})
+contin = ['geoid', 'state', 'c_perim', 'c_area', 'c_4pi*a/p^2', 'rank_c_4pi*a/p^2']
 result_nopro = result[contin + rank1 + rank2 + score1 + score2 + perim1 + perim2 + area1 + area2]
 result_pro = result[contin + rank1 + rank1p + rank2 + rank2p +
                     score1 + score1p + score2 + score2p +
