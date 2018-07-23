@@ -35,8 +35,7 @@ def get_and_unzip(url, data_dir=os.getcwd()):
         del(zip_obj)
 
 def get_unit_data(fip, unit_name):
-    #CENSUS_API_KEY = "YOUR KEY HERE"
-    CENSUS_API_KEY = "0df349d964b97ecb10362e8421c616c5fa38f462"
+    CENSUS_API_KEY = "YOUR KEY HERE"
     HOST = "https://api.census.gov/data"
     # set year for data and acs5 or sf1 (sf1 stands for summary file 1)
     # as of july, 2018 - documentation can be found here:
