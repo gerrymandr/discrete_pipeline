@@ -11,6 +11,11 @@ tf = [not row['geoid'][2:] == 'ZZ' for i, row in df.iterrows()]
 df = df[tf]
 df = df.reset_index(drop=True)
 
+# Removing DC
+tf_dc = [not row['geoid'][:2] == '11' for i, row in df.iterrows()]
+df = df[tf_dc]
+df = df.reset_index(drop=True)
+
 percent_list = ["0.5", "0.1"]
 
 for perc in percent_list:
