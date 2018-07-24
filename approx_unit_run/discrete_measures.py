@@ -1,9 +1,10 @@
-import geopandas as gpd
-import pandas as pd
-import shapely.wkt
-import networkx as nx
+import math
 
-def discrete_perim_and_area(df_dist, df_units, membership, approx_assignment, prorate = True, pop_field = "P0010001"):
+
+def discrete_perim_and_area(df_dist, df_units, membership,
+                            approx_assignment, prorate=True,
+                            pop_field="P0010001"):
+    # perim and area are dictionaries {district: perim, area}
     perim = {}
     area = {}
     for i, dist in df_dist.iterrows():
@@ -19,85 +20,77 @@ def discrete_perim_and_area(df_dist, df_units, membership, approx_assignment, pr
         tmp_darea_pro = 0
         tmp_dparea_pro = 0
         for j, unit in df_units.iterrows():
+            pop = int(unit[pop_field])
+            perc_in_dist = dist_units[unit["geoid"]]
             if unit["geoid"] in approx_assignment[dist["geoid"]]:
                 tmp_darea += 1
-                tmp_dparea += int(unit[pop_field])
+                tmp_dparea += pop
                 if prorate:
-                    tmp_darea_pro += dist_units[unit["geoid"]]
-                    tmp_dparea_pro += int(unit[pop_field])*dist_units[unit["geoid"]]
+                    tmp_darea_pro += perc_in_dist
+                    tmp_dparea_pro += pop*perc_in_dist
                 if unit.geometry.intersects(dist.geometry.boundary):
                     tmp_dperim += 1
-                    tmp_dpperim += int(unit[pop_field])
+                    tmp_dpperim += pop
                     if prorate:
-                      tmp_dperim_pro += dist_units[unit["geoid"]]
-                      tmp_dpperim_pro += int(unit[pop_field])*dist_units[unit["geoid"]]
+                        tmp_dperim_pro += perc_in_dist
+                        tmp_dpperim_pro += pop*perc_in_dist
         perim[dist["geoid"]] = [tmp_dperim, tmp_dpperim]
         if prorate:
             perim[dist["geoid"]].extend([tmp_dperim_pro, tmp_dpperim_pro])
-        
+
         area[dist["geoid"]] = [tmp_darea, tmp_dparea]
         if prorate:
             area[dist["geoid"]].extend([tmp_darea_pro, tmp_dparea_pro])
     return (perim, area)
 
-UTMS = ["02", "04", "05", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20", "55"]
+
+UTMS = ["02", "04", "05", "10", "11", "12", "13", "14",
+        "15", "16", "17", "18", "19", "20", "55"]
+
 
 class ProjectionCalculator:
     """
-    Take a dataframe from Shapefile of census cells and assign respective UTM zones
+    Take a dataframe from Shapefile of census cells
+    and assign respective UTM zones, and creates an area and
+    perim dictionary. All output units are in km^2
     """
     def __init__(self, gdf):
         """
         param gdf: dataframe containing census cells (usually VTDs)
         """
-        self.gdf = gdf
-        #self.gdf.columns = map(str.lower, self.gdf.columns)
-        self.find_utms
-        self.calc_continuous
-        self.calc_score
+        # initializing local variables
+        self.gdf = gdf.copy(deep=True)
+        # sometimes dataframes have geoid in upper case
+        self.gdf.columns = map(str.lower, self.gdf.columns)
+        self.perim_dict = {}
+        self.area_dict = {}
+        self.find_utms()
+        self.calc_continuous()
 
     def find_utms(self):
+        utm_list = []
         """
         Assign appropriate UTM zone for proper projection.
         """
-        for index in range(0, len(self.gdf)):
-            dist = self.gdf.iloc[[index]][['geoid', 'geometry', 'utm']]
-            utm = math.floor((self.gdf.iloc[[index]].centroid.x+180)*59/354)+1
+        for index, dist in self.gdf.iterrows():
+            utm = math.floor((dist.geometry.centroid.x+180)*59/354)+1
             utm = str(utm).zfill(2)
-            dist = dist.assign(utm=utm)
-            if index == 0:
-                dist_utms = dist
-            else:
-                dist_utms = pd.concat([dist_utms, dist])
-        self.gdf['utm'] = dist_utms['utm']
+            utm_list.append(utm)
+        self.gdf['utm'] = utm_list
 
     def calc_continuous(self):
         """
         Calculate continuous area and perimeters.
         """
         for utm in UTMS:
-            zone = self.gdf.loc[self.gdf['utm'] == utm][['geoid', 'geometry', 'utm']]
-            epsg = int('269' + utm)
-            zone_area = zone.to_crs(epsg=epsg).area/1000**2
-            zone = zone.assign(area=zone_area.values)
-            zone_peri = zone.to_crs(epsg=epsg).length/1000
-            zone = zone.assign(perimeter=zone_peri.values)
-            if utm == UTMS[0]:
-                calc = zone
-            else:
-                calc = pd.concat([calc, zone])
-        self.gdf = pd.merge(self.gdf, calc, how='left', on=['geoid', 'geometry', 'utm'])
-        
-    def calc_score(self):
-        """
-        Calculate Polsby-Popper scores.
-        """
-        for index in range(0, len(self.gdf)):
-            dist = self.gdf.iloc[[index]][['geoid', 'area', 'perimeter']]
-            score = 4*math.pi*dist['area']/dist['perimeter']**2
-            dist = dist.assign(score=score)
-            if index == 0:
-                dist_scores = dist
-            else:
-                dist_scores = pd.concat([dist_scores, dist])
-        self.gdf = pd.merge(self.gdf, dist_scores, how='left', on=['geoid', 'area', 'perimeter'])
+            my_epsg = '269' + utm  # epsg crs for a particular utm code
+            # changing the crs for the whole dataframe:
+            self.gdf = self.gdf.to_crs({"init": "epsg:" + my_epsg})
+            # zone is all the districts whose utm is the one in the loop
+            zone = self.gdf.loc[self.gdf['utm'] == utm][['geoid',
+                                                         'geometry', 'utm']]
+            zone["area"] = zone.geometry.area / 1000**2
+            zone["perim"] = zone.geometry.length / 1000
+            for i, row in zone.iterrows():
+                self.area_dict.update({row["geoid"]: row["area"]})
+                self.perim_dict.update({row["geoid"]: row["perim"]})

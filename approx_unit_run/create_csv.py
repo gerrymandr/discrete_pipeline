@@ -42,12 +42,12 @@ def compute_measures(state, districts, unit, plan_name):
         state_districts["geoid"] = state_districts["GEOID"]
     for d_geoid in state_districts["geoid"]:
         data[d_geoid] = []
-    state_districts.crs = {'init': 'epsg:2163'}
+    state_districts = state_districts.to_crs({'init': 'epsg:2163'})
 
     unit_filename = '2010_' + state + '_' + unit + '_pop.shp'
     state_units = gpd.GeoDataFrame.from_file(unit_filename)
     state_units["geoid"] = state_units["GEOID10"]
-    state_units.crs = {'init': 'epsg:2163'}
+    state_units = state_units.to_crs({'init': 'epsg:2163'})
 
     #TODO: check if membership has already been computed
     print('looking for membership files')
