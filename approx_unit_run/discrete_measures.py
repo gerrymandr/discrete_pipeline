@@ -4,11 +4,25 @@ import math
 def discrete_perim_and_area(df_dist, df_units, membership,
                             approx_assignment, prorate=True,
                             pop_field="P0010001"):
+    '''
+    discrete_perim_and_area returns dictionaries giving
+    discrete perimeter and area of a district dataframe,
+    df_dist in terms of a unit dataframe, df_units.
+
+    The additional required information is membership,
+    a dictionary of dictionaries (see approximate_assignment.py)
+    and approx_assignment (see approximate_assignment.py).
+
+    prorate is an option to also report prorated stats
+    '''
     # perim and area are dictionaries {district: perim, area}
     perim = {}
     area = {}
     for i, dist in df_dist.iterrows():
         perim[dist["geoid"]] = []
+        area[dist["geoid"]] = []
+        # dist_units is a dict of all units in the district, and their 
+        # percent containment
         dist_units = membership[dist["geoid"]]
         tmp_dperim = 0
         tmp_dpperim = 0
@@ -34,6 +48,7 @@ def discrete_perim_and_area(df_dist, df_units, membership,
                     if prorate:
                         tmp_dperim_pro += perc_in_dist
                         tmp_dpperim_pro += pop*perc_in_dist
+        # save the temporary tallies into the dictionary outputs
         perim[dist["geoid"]] = [tmp_dperim, tmp_dpperim]
         if prorate:
             perim[dist["geoid"]].extend([tmp_dperim_pro, tmp_dpperim_pro])
