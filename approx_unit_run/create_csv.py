@@ -94,9 +94,8 @@ def compute_measures(state, districts, unit, plan_name):
 
     print('running continuous metrics')
     proj = ProjectionCalculator(state_districts)
-    for i, dist in proj.gdf.iterrows():
-        carea[dist["geoid"]] = dist.geometry.area
-        cperim[dist["geoid"]] = dist.geometry.length
+    carea = proj.area_dict
+    cperim = proj.perim_dict
 
     os.chdir("../../")
     if not os.path.exists(os.path.join(os.getcwd(),"./tables")):
