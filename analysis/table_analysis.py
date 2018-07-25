@@ -9,95 +9,133 @@ import geopandas as gpd
 import matplotlib.pyplot as plt
 from descartes import PolygonPatch
 import scipy.stats as stats
-
-# create a dictionary of FIPS code : state name for titles
-fips = pd.read_csv('../state_fips.txt', sep='\t', lineterminator='\n',
-                   dtype={"STATE": str, "FIP": str})
-fips_dict = {}
-for i, row in fips.iterrows():
-    fips_dict.update({row["FIP"]: row["STATE"]})
+import tkinter as tk
 
 
-def different_table_plot(xtable_name, ytable_name, xvec, yvec):
+class PlotData():
+    '''
+    This class sets up a single plot in the four-subplot matplotlib window.
+    '''
+    def __init__(self, coords):
+        self.coords = coords
+        self.ax = axarr[coords]  # coords are the subplot coordinates
+        self.data = merge_table
+        self.xname = "disc_area_g_0.5" # default x and y
+        self.yname = "rank_disc_pp_g_0.5"
+        self.x = self.data[self.xname]
+        self.y = self.data[self.yname]
+        self.hilited = "0101"  # Alabama district 1 baby!
 
-    # read and merge relevant dataframes
-    df1 = pd.read_csv(xtable_name, dtype={"geoid": str})
-    df2 = pd.read_csv(ytable_name, dtype={"geoid": str})
+        self.refresh()
 
-    xdf = df1["geoid"].to_frame()
-    xdf["xname"] = df1[xvec]
+    # refreshes the plot
+    def refresh(self):
+        self.ax.clear()
+        self.selected = self.ax.plot(0, 0, "o", ms=12,
+                                     alpha=1, color="red", visible=False)[0]
+        self.set_plot()
+        self.set_hilite(self.hilited)
+        self.kendall_tau()
 
-    ydf = df2["geoid"].to_frame()
-    ydf["yname"] = df2[yvec]
+    def set_xname(self, new_name):
+        try:
+            self.xname = new_name
+            self.x = self.data[self.xname]
+            self.refresh()
+        except:
+            print("I could not find this column name!")
 
-    mergedf = xdf.merge(ydf, left_on="geoid", right_on="geoid")
+    def set_yname(self, new_name):
+        self.yname = new_name
+        self.y = self.data[self.yname]
+        self.refresh()
 
-    # the order of these lists is important.
-    x = mergedf["xname"]
-    y = mergedf["yname"]
-    geoids = mergedf["geoid"]
-    return (x, y, list(geoids))
+    def set_hilite(self, geoid):
+        index = geoids.index(geoid)
+        self.selected.set_visible(True)
+        self.selected.set_data([self.x[index]], [self.y[index]])
+        self.hilited = geoid
+
+    # add some titles and labels to the plot
+    def set_plot(self):
+        self.ax.plot(self.x, self.y, 'o', picker=10, color='purple')
+        self.ax.set_title("Scatter plot of " + self.xname +
+                          " and " + self.yname)
+        self.ax.set_xlabel(self.xname)
+        self.ax.set_ylabel(self.yname)
+
+    # compute and display Kendall Tau scores
+    def kendall_tau(self):
+        self.tau, self.p_value = stats.kendalltau(self.x, self.y)
+        props = dict(boxstyle='round', facecolor='wheat', alpha=0.9)
+        self.ax.text(0.05, 0.95, str(self.tau)[:6],
+                     transform=axarr[self.coords].transAxes, fontsize=14,
+                     verticalalignment='top', bbox=props)
 
 
-def find_subplot(event):
+def create_col_name(res="discrete", unit="block groups",
+                    val="polsby", thresh="0.5", ranked=True, weighted=False):
+    ''' This function takes in human variables and converts them
+    to the appropriate column headers in the dataset
+    '''
+    name = ""
+    if ranked:
+        name += "rank_"
+    if res == "discrete":
+        name += "disc_"
+        if weighted:
+            name += "w_"
+        if val == "polsby":
+            name += "pp_"
+        if val in ["perim", "area"]:
+            name += val + "_"
+        if unit == "block groups":
+            name += "g_"
+        if unit == "blocks":
+            name += "b_"
+        if unit == "tracts":
+            name += "t_"
+        name += thresh
+    if res in ["tiger", "500k", "5m", "20m"]:
+        name += "cont_"
+        if val == "polsby":
+            name += "pp_"
+        if val in ["perim", "area"]:
+            name += val + "_"
+        name += res
+    return name
+
+
+def hilite_plots(event):
+    # this code finds the plot in which the user clicks
     mouse = event.mouseevent
-    (fx, fy) = f.transFigure.inverted().transform((mouse.x, mouse.y))
-    bb1 = axarr[0,0].get_position()
-    bb2 = axarr[0,1].get_position()
-    bb3 = axarr[1,0].get_position()
-    if bb1.contains(fx, fy):
-        return 1
-    if bb2.contains(fx, fy):
-        return 2
-    if bb3.contains(fx, fy):
-        return 3
-    return 0
-
-
-def highlight_event(event, plotnum):
     ind = event.ind[0]
-    if plotnum == 1:
-        selected_geoid = geoids1[ind]
-    if plotnum == 2:
-        selected_geoid = geoids2[ind]
-    if plotnum == 3:
-        selected_geoid = geoids3[ind]
-
-    ind1 = geoids1.index(selected_geoid)
-    selected[0].set_visible(True)
-    selected[0].set_data([x1[ind1]], [y1[ind1]])
-
-    ind2 = geoids2.index(selected_geoid)
-    selected[1].set_visible(True)
-    selected[1].set_data([x2[ind2]], [y2[ind2]])
-
-    ind3 = geoids3.index(selected_geoid)
-    selected[2].set_visible(True)
-    selected[2].set_data([x3[ind3]], [y3[ind3]])
+    (fx, fy) = f.transFigure.inverted().transform((mouse.x, mouse.y))
+    for p in plotlist:
+        if p.ax.get_position().contains(fx, fy):
+            # if the mouse lies in plot p, then the find the selected geoid
+            selected_geoid = geoids[ind]
+            # update the other plots with that geoid
+            for q in plotlist:
+                q.set_hilite(selected_geoid)
     return selected_geoid
 
 
 # this function is called when a point is clicked
 def on_pick(event):
-    plotnum = find_subplot(event)
-    selected_geoid = highlight_event(event, plotnum)
+    selected_geoid = hilite_plots(event)
     # x_df is the dataframe I use to plot the district
-    x_df = gpd.read_file("../approx_unit_run/districting_plans/" +
-                         "cb_2013_us_cd113_500k/" +
-                         "cb_2013_us_cd113_500k.shp")
-    if selected_geoid:
-        if selected_geoid[2:] == "ZZ":
-            print("district made of water :o")
-        else:
-            # draws the map that happens when you click a point
-            drawmap(selected_geoid, x_df)
+    map_df = gpd.read_file("../approx_unit_run/districting_plans/" +
+                           "cb_2013_us_cd113_500k/" +
+                           "cb_2013_us_cd113_500k.shp")
+    drawmap(selected_geoid, map_df)
     f.canvas.draw()
 
 
 def drawmap(geoid, df):
     # create a new figure
     # fig2, ax2 = plt.subplots()
-    axarr[1,1].clear()
+    axarr[1, 1].clear()
     patchdict = {}
     for i, dist in df.iterrows():
         if dist["GEOID"] == geoid:
@@ -109,91 +147,171 @@ def drawmap(geoid, df):
             patch = PolygonPatch(dist.geometry, fc='#D3D3D3',
                                  ec='#D3D3D3', alpha=1, zorder=2)
             patchdict.update({i: patch})
-            axarr[1,1].add_patch(patch)
-            axarr[1,1].axis('scaled')
-    axarr[1,1].add_patch(special_patch)
-    axarr[1,1].axis('scaled')
-    axarr[1,1].set_title("district " + str(int(geoid[2:])) + " in " +
-                  fips_dict[geoid[:2]])
+            axarr[1, 1].add_patch(patch)
+            axarr[1, 1].axis('scaled')
+    axarr[1, 1].add_patch(special_patch)
+    axarr[1, 1].axis('scaled')
+    axarr[1, 1].set_title("district " + str(int(geoid[2:])) + " in " +
+                          fips_dict[geoid[:2]])
     plt.draw()
 
 
 f, axarr = plt.subplots(2, 2)
-selected = []
+plt.subplots_adjust(bottom=0.2)
 
-xvec = "rank_a/p^2 (b) 0.5"
-yvec = "rank_a/p^2 (g) 0.5"
-xtable_name = "big_table.csv"
-ytable_name = "big_table.csv"
 
-# xvec = "rank_tiger_aland"
-# yvec = "tiger_rank_c_4pi*a/p^2"
-# xtable_name = "zoom_table.csv"
-# ytable_name = "zoom_table.csv"
-(x1, y1, geoids1) = different_table_plot(xtable_name, ytable_name,
-                                         xvec, yvec)
-selected.extend(axarr[0,0].plot(0, 0, 'o', ms=12, alpha=1, color='red', visible=False))
+class ColumnInputs():
+    def __init__(self, location, pltnum):
+        self.location = location
+        self.pltnum = pltnum
+        self.ax = plt.axes(location)
+        self.butt = plt.Button(self.ax, self.make_name())
+        self.butt.on_clicked(self.input_window)
+        self.name = ""
 
-axarr[0,0].plot(x1, y1, 'o', picker=10, color='purple')
-axarr[0,0].set_title("Scatter plot of " + xvec + " and " + yvec)
-axarr[0,0].set_ylabel(ytable_name + " : " + yvec)
-axarr[0,0].set_xlabel(xtable_name + " : " + xvec)
+    def make_name(self):
+        if self.pltnum == 0:
+            return "Upper Left"
+        if self.pltnum == 1:
+            return "Upper Right"
+        if self.pltnum == 2:
+            return "Bottom Left"
 
-tau, p_value = stats.kendalltau(x1, y1)
-props = dict(boxstyle='round', facecolor='wheat', alpha=0.9)
-axarr[0,0].text(0.05, 0.95, str(tau)[:6], transform=axarr[0,0].transAxes, fontsize=14, 
-        verticalalignment='top', bbox=props)
+    def input_window(self, event):
+        def input_entry_fields_x():
+            res = tk_res_var_x.get()
+            val = tk_val_var_x.get()
+            unit = tk_unit_var_x.get()
+            thresh = tk_thresh_var_x.get()
+            rk = ranked_x.get()
+            wt = weighted_x.get()
+            name = create_col_name(res, unit, val, thresh, rk, wt)
+            print(name)
+            plotlist[self.pltnum].set_xname(name)
+            
+        def input_entry_fields_y():
+            res = tk_res_var_y.get()
+            val = tk_val_var_y.get()
+            unit = tk_unit_var_y.get()
+            thresh = tk_thresh_var_y.get()
+            rk = ranked_y.get()
+            wt = weighted_y.get()
+            name = create_col_name(res, unit, val, thresh, rk, wt)
+            print(name)
+            plotlist[self.pltnum].set_yname(name)
 
-xvec = "rank_a/p^2 (g) 0.5"
-yvec = "rank_a/p^2 (t) 0.5"
-xtable_name = "big_table.csv"
-ytable_name = "big_table.csv"
-(x2, y2, geoids2) = different_table_plot(xtable_name, ytable_name,
-                                         xvec, yvec)
-selected.extend(axarr[0,1].plot(0, 0, 'o', ms=12, alpha=1, color='red', visible=False))
+        master = tk.Tk()
+        master.title("Set x and y axes")
 
-axarr[0,1].plot(x2, y2, 'o', picker=10, color='purple')
-axarr[0,1].set_title("Scatter plot of " + xvec + " and " + yvec)
-axarr[0,1].set_ylabel(ytable_name + " : " + yvec)
-axarr[0,1].set_xlabel(xtable_name + " : " + xvec)
+        mainframe = tk.Frame(master)
+        mainframe.grid(column=0, row=0, sticky=(tk.N, tk.W, tk.E, tk.S))
+        # Dictionary with options
+        tk.Label(mainframe, text="SET X PLOT DATA").grid(row=0, column=0)
 
-tau, p_value = stats.kendalltau(x2, y2)
-props = dict(boxstyle='round', facecolor='wheat', alpha=0.9)
-axarr[0,1].text(0.05, 0.95, str(tau)[:6], transform=axarr[0,1].transAxes, fontsize=14, 
-        verticalalignment='top', bbox=props)
+        tk_res_var_x = tk.StringVar(master)
+        choices = {"discrete", "tiger", "500k", "5m", "20m"}
+        tk_res_var_x.set('discrete')  # set the default option
+        popupMenu = tk.OptionMenu(mainframe, tk_res_var_x, *choices)
+        tk.Label(mainframe, text="Resolution").grid(row=1, column=0)
+        popupMenu.grid(row=2, column=0)
 
-xvec = "rank_a/p^2 (t) 0.5"
-yvec = "rank_a/p^2 (b) 0.5"
-(x3, y3, geoids3) = different_table_plot(xtable_name, ytable_name,
-                                         xvec, yvec)
-selected.extend(axarr[1, 0].plot(0, 0, 'o', ms=12, alpha=1, color='red', visible=False))
+        tk_val_var_x = tk.StringVar(master)
+        choices = {"polsby", "perim", "area"}
+        tk_val_var_x.set("polsby")
+        popupMenu = tk.OptionMenu(mainframe, tk_val_var_x, *choices)
+        tk.Label(mainframe, text="What data?").grid(row=3, column=0)
+        popupMenu.grid(row=4, column=0)
 
-axarr[1, 0].plot(x3, y3, 'o', picker=10, color='purple')
-axarr[1, 0].set_title("Scatter plot of " + xvec + " and " + yvec)
-axarr[1, 0].set_ylabel(ytable_name + " : " + yvec)
-axarr[1, 0].set_xlabel(xtable_name + " : " + xvec)
+        tk_unit_var_x = tk.StringVar(master)
+        choices = {"blocks", "block groups", "tracts"}
+        tk_unit_var_x.set("block groups")
+        popupMenu = tk.OptionMenu(mainframe, tk_unit_var_x, *choices)
+        tk.Label(mainframe, text="Unit").grid(row=1, column=1)
+        popupMenu.grid(row=2, column=1)
 
-tau, p_value = stats.kendalltau(x3, y3)
-props = dict(boxstyle='round', facecolor='wheat', alpha=0.9)
-axarr[1,0].text(0.05, 0.95, str(tau)[:6], transform=axarr[1,0].transAxes, fontsize=14, 
-        verticalalignment='top', bbox=props)
-'''
-xvec = "tiger_rank_c_4pi*a/p^2"
-yvec = "20m_rank_c_4pi*a/p^2"
-(x4, y4, geoids1) = different_table_plot(xtable_name, ytable_name,
-                                         xvec, yvec)
-selected4 = ax4.plot(0, 0, 'o', ms=12, alpha=1, color='red', visible=False)[0]
+        tk_thresh_var_x = tk.StringVar(master)
+        choices = {"0.1", "0.5"}
+        tk_thresh_var_x.set("0.5")
+        popupMenu = tk.OptionMenu(mainframe, tk_thresh_var_x, *choices)
+        tk.Label(mainframe, text="Threshold").grid(row=3, column=1)
+        popupMenu.grid(row=4, column=1)
 
-ax4.plot(x4, y4, 'o', picker=10, color='purple')
-ax4.set_title("Scatter plot of " + xvec + " and " + yvec)
-ax4.set_ylabel(ytable_name + " : " + yvec)
-ax4.set_xlabel(xtable_name + " : " + xvec)
+        ranked_x = tk.IntVar()
+        tk.Checkbutton(mainframe, text="ranked",
+                       variable=ranked_x).grid(row=5, column=0)
+        weighted_x = tk.IntVar()
+        tk.Checkbutton(mainframe, text="pop weighted",
+                       variable=weighted_x).grid(row=5, column=1)
 
-tau, p_value = stats.kendalltau(x4, y4)
-props = dict(boxstyle='round', facecolor='wheat', alpha=0.9)
-ax4.text(0.05, 0.95, str(tau)[:6], transform=ax4.transAxes, fontsize=14, 
-        verticalalignment='top', bbox=props)
-'''
+        # adding buttons for y axis
+        tk.Label(mainframe, text="SET Y PLOT DATA").grid(row=0, column=2)
+        tk_res_var_y = tk.StringVar(master)
+        choices = {"discrete", "tiger", "500k", "5m", "20m"}
+        tk_res_var_y.set('discrete')
+        popupMenu = tk.OptionMenu(mainframe, tk_res_var_y, *choices)
+        tk.Label(mainframe, text="Resolution").grid(row=1, column=2)
+        popupMenu.grid(row=2, column=2)
+
+        tk_val_var_y = tk.StringVar(master)
+        choices = {"polsby", "perim", "area"}
+        tk_val_var_y.set("polsby")
+        popupMenu = tk.OptionMenu(mainframe, tk_val_var_y, *choices)
+        tk.Label(mainframe, text="What data?").grid(row=3, column=2)
+        popupMenu.grid(row=4, column=2)
+
+        tk_unit_var_y = tk.StringVar(master)
+        choices = {"blocks", "block groups", "tracts"}
+        tk_unit_var_y.set("block groups")
+        popupMenu = tk.OptionMenu(mainframe, tk_unit_var_y, *choices)
+        tk.Label(mainframe, text="Unit").grid(row=1, column=3)
+        popupMenu.grid(row=2, column=3)
+
+        tk_thresh_var_y = tk.StringVar(master)
+        choices = {"0.1", "0.5"}
+        tk_thresh_var_y.set("0.5")
+        popupMenu = tk.OptionMenu(mainframe, tk_thresh_var_y, *choices)
+        tk.Label(mainframe, text="Threshold").grid(row=3, column=3)
+        popupMenu.grid(row=4, column=3)
+
+        ranked_y = tk.IntVar()
+        tk.Checkbutton(mainframe, text="ranked",
+                       variable=ranked_y).grid(row=5, column=2)
+        weighted_y = tk.IntVar()
+        tk.Checkbutton(mainframe, text="pop weighted",
+                       variable=weighted_y).grid(row=5, column=3)
+
+        showbuttonx = tk.Button(mainframe, text='Input x name',
+                               command=input_entry_fields_x)
+        showbuttonx.grid(row=6, column=1, sticky=tk.W, pady=4)
+        
+        showbuttony = tk.Button(mainframe, text='Input y name',
+                               command=input_entry_fields_y)
+        showbuttony.grid(row=6, column=3, sticky=tk.W, pady=4)
+        tk.mainloop()
+
+
+# create a dictionary of FIPS code : state name for titles
+fips = pd.read_csv('../state_fips.txt', sep='\t', lineterminator='\n',
+                   dtype={"STATE": str, "FIP": str})
+fips_dict = {}
+
+for i, row in fips.iterrows():
+    fips_dict.update({row["FIP"]: row["STATE"]})
+
+zoom_df = pd.read_csv("zoom_table.csv", dtype={"geoid": str})
+big_df = pd.read_csv("big_table.csv", dtype={"geoid": str})
+merge_table = zoom_df.merge(big_df, left_on="geoid", right_on="geoid")
+geoids = list(merge_table["geoid"])
+
+in1 = ColumnInputs([0.5, 0.05, 0.1, 0.075], 0)
+in2 = ColumnInputs([0.6, 0.05, 0.1, 0.075], 1)
+in3 = ColumnInputs([0.7, 0.05, 0.1, 0.075], 2)
+
+plotlist = []
+for i in range(3):
+    # initializing the plot classes into a list
+    plotlist.append(PlotData((int(i/2), i % 2)))  # turns 0,1,2 to 00,01,10
+
 f.canvas.mpl_connect('pick_event', on_pick)
-plt.suptitle("Comparing Polsby Popper scores across cartographic boundary resolutions (with normalized Kendall tau scores)", 
-             fontsize = 22)
+plt.suptitle("Comparing Polsby Popper scores across cartographic boundary resolutions (with normalized Kendall tau scores)", fontsize=22)
+plt.show()
