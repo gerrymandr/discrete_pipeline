@@ -124,10 +124,31 @@ result_pro = result[contin + rank1 + rank1p + rank2 + rank2p +
                     perim1 + perim1p + perim2 + perim2p +
                     area1 + area1p + area2 + area2p]
 
+# Write to CSV here to keep old header names
+#result_nopro.to_csv("./big_table.csv")      # length 54
+#result_pro.to_csv("./big_table_pro.csv")    # length 86 because 54+32 for prorated
+
+# Set new header names
+result_nopro.rename(columns=lambda x: x.replace(' (b) ', '_b_'), inplace=True)
+result_nopro.rename(columns=lambda x: x.replace(' (g) ', '_g_'), inplace=True)
+result_nopro.rename(columns=lambda x: x.replace(' (t) ', '_t_'), inplace=True)
+result_nopro.rename(columns=lambda x: x.replace('c', 'cont'), inplace=True)
+result_nopro.rename(columns=lambda x: x.replace('4pi*a/p^2', 'pp'), inplace=True)
+result_nopro.rename(columns=lambda x: x.replace('w_a/p^2', 'disc_w_pp'), inplace=True)
+result_nopro.rename(columns=lambda x: x.replace('a/p^2', 'disc_pp'), inplace=True)
+
+result_pro.rename(columns=lambda x: x.replace(' (b) ', '_b_'), inplace=True)
+result_pro.rename(columns=lambda x: x.replace(' (g) ', '_g_'), inplace=True)
+result_pro.rename(columns=lambda x: x.replace(' (t) ', '_t_'), inplace=True)
+result_pro.rename(columns=lambda x: x.replace('c', 'cont'), inplace=True)
+result_pro.rename(columns=lambda x: x.replace('4pi*a/p^2', 'pp'), inplace=True)
+result_pro.rename(columns=lambda x: x.replace('w_a/p^2', 'disc_w_pp'), inplace=True)
+result_pro.rename(columns=lambda x: x.replace('a/p^2', 'disc_pp'), inplace=True)
+
 result_nopro.to_csv("./big_table.csv")      # length 54
 result_pro.to_csv("./big_table_pro.csv")    # length 86 because 54+32 for prorated
 
-header = ['', '', 'CONTINUOUS:', 'CONTINUOUS:',  'CONTINUOUS SCORE:', 'CONTINUOUS RANK:', 
+header_nopro = ['', '', 'CONTINUOUS:', 'CONTINUOUS:',  'CONTINUOUS SCORE:', 'CONTINUOUS RANK:', 
            'POP RANK:', 'POP RANK:', 'POP RANK:', 'POP RANK:', 'POP RANK:', 'POP RANK:',
            'RANKING:', 'RANKING:', 'RANKING:', 'RANKING:', 'RANKING:', 'RANKING:',
            'POP SCORE:', 'POP SCORE:', 'POP SCORE:', 'POP SCORE:', 'POP SCORE:', 'POP SCORE:',
@@ -136,7 +157,26 @@ header = ['', '', 'CONTINUOUS:', 'CONTINUOUS:',  'CONTINUOUS SCORE:', 'CONTINUOU
            'POP PERIM:', 'POP PERIM:', 'POP PERIM:', 'POP PERIM:', 'POP PERIM:', 'POP PERIM:',
            'AREA:', 'AREA:', 'AREA:', 'AREA:', 'AREA:', 'AREA:',
            'POP AREA:', 'POP AREA:', 'POP AREA:', 'POP AREA:', 'POP AREA:', 'POP AREA:']
-result_nopro.columns = pd.MultiIndex.from_tuples(list(zip(header, result_nopro.columns)))
+
+header_pro = ['', '', 'CONTINUOUS:', 'CONTINUOUS:',  'CONTINUOUS SCORE:', 'CONTINUOUS RANK:', 
+           'POP RANK:', 'POP RANK:', 'POP RANK:', 'POP RANK:', 'POP RANK:', 'POP RANK:',
+           'PRO POP RANK:', 'PRO POP RANK:', 'PRO POP RANK:', 'PRO POP RANK:', 
+           'RANKING:', 'RANKING:', 'RANKING:', 'RANKING:', 'RANKING:', 'RANKING:',
+           'PRO RANKING:', 'PRO RANKING:', 'PRO RANKING:', 'PRO RANKING:', 
+           'POP SCORE:', 'POP SCORE:', 'POP SCORE:', 'POP SCORE:', 'POP SCORE:', 'POP SCORE:',
+           'PRO POP SCORE:', 'PRO POP SCORE:', 'PRO POP SCORE:','PRO POP SCORE:',
+           'SCORE:', 'SCORE:', 'SCORE:', 'SCORE:', 'SCORE:', 'SCORE:',
+           'PRO SCORE:', 'PRO SCORE:', 'PRO SCORE:', 'PRO SCORE:',
+           'PERIM:', 'PERIM:', 'PERIM:', 'PERIM:', 'PERIM:', 'PERIM:',
+           'PRO PERIM:', 'PRO PERIM:', 'PRO PERIM:', 'PRO PERIM:', 
+           'POP PERIM:', 'POP PERIM:', 'POP PERIM:', 'POP PERIM:', 'POP PERIM:', 'POP PERIM:',
+           'PRO POP PERIM:', 'PRO POP PERIM:',  'PRO POP PERIM:', 'PRO POP PERIM:',
+           'AREA:', 'AREA:', 'AREA:', 'AREA:', 'AREA:', 'AREA:',
+           'PRO AREA:', 'PRO AREA:', 'PRO AREA:', 'PRO AREA:',
+           'POP AREA:', 'POP AREA:', 'POP AREA:', 'POP AREA:', 'POP AREA:', 'POP AREA:',
+           'PRO POP AREA:', 'PRO POP AREA:', 'PRO POP AREA:', 'PRO POP AREA:']
+result_nopro.columns = pd.MultiIndex.from_tuples(list(zip(result_nopro.columns, header_nopro)))
+result_pro.columns = pd.MultiIndex.from_tuples(list(zip(result_pro.columns, header_pro)))
 
 result_nopro.to_csv("./stylized/style_big_table.csv")      # length 54
 result_pro.to_csv("./stylized/style_big_table_pro.csv")    # length 86 because 54+32 for prorated

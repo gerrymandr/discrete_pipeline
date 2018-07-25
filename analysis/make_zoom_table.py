@@ -10,17 +10,17 @@ The output also includes the land area and water area for each shapefile and cor
 # Load in 4 data tables, used tracts but tract = block group for continuous
 files = ["tigerline", "cb500k", "cb5m", "cb20m"]
 tiger = pd.read_csv("./tables_merged/tigerline_tract.csv", dtype={"geoid": str})
-tiger = tiger.rename(columns={'c_area': 'tiger_c_area', 'c_perim': 'tiger_c_perim',
-                              'c_a/p^2': 'tiger_c_4pi*a/p^2', 'rank_c_a/p^2': 'tiger_rank_c_4pi*a/p^2'})
+tiger = tiger.rename(columns={'c_area': 'c_area_tiger', 'c_perim': 'c_perim_tiger',
+                              'c_a/p^2': 'c_4pi*a/p^2_tiger', 'rank_c_a/p^2': 'rank_c_4pi*a/p^2_tiger'})
 cb500 = pd.read_csv("./tables_merged/cb500k_tract.csv", dtype={"geoid": str})
-cb500 = cb500.rename(columns={'c_area': '500k_c_area', 'c_perim': '500k_c_perim',
-                              'c_a/p^2': '500k_c_4pi*a/p^2', 'rank_c_a/p^2': '500k_rank_c_4pi*a/p^2'})
+cb500 = cb500.rename(columns={'c_area': 'c_area_500k', 'c_perim': 'c_perim_500k',
+                              'c_a/p^2': 'c_4pi*a/p^2_500k', 'rank_c_a/p^2': 'rank_c_4pi*a/p^2_500k'})
 cb5 = pd.read_csv("./tables_merged/cb5m_tract.csv", dtype={"geoid": str})
-cb5 = cb5.rename(columns={'c_area': '5m_c_area', 'c_perim': '5m_c_perim',
-                              'c_a/p^2': '5m_c_4pi*a/p^2', 'rank_c_a/p^2': '5m_rank_c_4pi*a/p^2'})
+cb5 = cb5.rename(columns={'c_area': 'c_area_5m', 'c_perim': 'c_perim_5m',
+                              'c_a/p^2': 'c_4pi*a/p^2_5m', 'rank_c_a/p^2': 'rank_c_4pi*a/p^2_5m'})
 cb20 = pd.read_csv("./tables_merged/cb20m_tract.csv", dtype={"geoid": str})
-cb20 = cb20.rename(columns={'c_area': '20m_c_area', 'c_perim': '20m_c_perim',
-                              'c_a/p^2': '20m_c_4pi*a/p^2', 'rank_c_a/p^2': '20m_rank_c_4pi*a/p^2'})
+cb20 = cb20.rename(columns={'c_area': 'c_area_20m', 'c_perim': 'c_perim_20m',
+                              'c_a/p^2': 'c_4pi*a/p^2_20m', 'rank_c_a/p^2': 'rank_c_4pi*a/p^2_20m'})
 
 # Merge 4 data tables
 df = tiger.merge(cb500,left_on = "geoid", right_on = "geoid").merge(
@@ -40,16 +40,16 @@ df['state'] = abbrev
 # Load in 4 district shapefiles and rename aland and awater to be unique to each
 tiger_plan = gpd.GeoDataFrame.from_file(
         '../approx_unit_run/districting_plans/cd2013/tl_rd13_us_cd113.shp')
-tiger_plan = tiger_plan.rename(columns={'ALAND': 'tiger_aland', 'AWATER': 'tiger_awater'})
+tiger_plan = tiger_plan.rename(columns={'ALAND': 'aland_tiger', 'AWATER': 'awater_tiger'})
 cb500_plan = gpd.GeoDataFrame.from_file(
         '../approx_unit_run/districting_plans/cb_2013_us_cd113_500k/cb_2013_us_cd113_500k.shp')
-cb500_plan = cb500_plan.rename(columns={'ALAND': 'cb500k_aland', 'AWATER': 'cb500k_awater'})
+cb500_plan = cb500_plan.rename(columns={'ALAND': 'aland_500k', 'AWATER': 'awater_500k'})
 cb5_plan = gpd.GeoDataFrame.from_file(
         '../approx_unit_run/districting_plans/cb_2013_us_cd113_5m/cb_2013_us_cd113_5m.shp')
-cb5_plan = cb5_plan.rename(columns={'ALAND': 'cb5m_aland', 'AWATER': 'cb5m_awater'})
+cb5_plan = cb5_plan.rename(columns={'ALAND': 'aland_5m', 'AWATER': 'awater_5m'})
 cb20_plan = gpd.GeoDataFrame.from_file(
         '../approx_unit_run/districting_plans/cb_2013_us_cd113_20m/cb_2013_us_cd113_20m.shp')
-cb20_plan = cb20_plan.rename(columns={'ALAND': 'cb20m_aland', 'AWATER': 'cb20m_awater'})
+cb20_plan = cb20_plan.rename(columns={'ALAND': 'aland_20m', 'AWATER': 'awater_20m'})
 
 df.sort_values('geoid', inplace=True)
 
@@ -62,22 +62,26 @@ df = df.merge(tiger_plan, left_on = "geoid", right_on = "GEOID").merge(
 # Add rankings of land and water
 rank_land = []
 rank_water = []
-for i in ["tiger", "cb500k", "cb5m", "cb20m"]:
-    df["rank_" + i + "_aland"] = df[i + "_aland"].rank(ascending = False)
-    df["rank_" + i + "_awater"] = df[i + "_awater"].rank(ascending = False)
-    rank_land = rank_land + ['rank_' + i + '_aland']
-    rank_water = rank_water + ['rank_' + i + '_awater']
+for i in ["tiger", "500k", "5m", "20m"]:
+    df["rank_aland_" + i] = df["aland_" + i].rank(ascending = False)
+    df["rank_awater_" + i] = df["awater_" + i].rank(ascending = False)
+    rank_land = rank_land + ['rank_aland_' + i]
+    rank_water = rank_water + ['rank_awater_' + i]
 
 # Reoder the columns
 df = df[['geoid', 'state', 
-         'tiger_rank_c_4pi*a/p^2', '500k_rank_c_4pi*a/p^2', '5m_rank_c_4pi*a/p^2', '20m_rank_c_4pi*a/p^2',
-         'tiger_c_4pi*a/p^2', '500k_c_4pi*a/p^2', '5m_c_4pi*a/p^2', '20m_c_4pi*a/p^2',
-         'tiger_c_perim', '500k_c_perim', '5m_c_perim', '20m_c_perim',
-         'tiger_c_area', '500k_c_area', '5m_c_area', '20m_c_area'] + rank_land + rank_water + [
-         'tiger_aland', 'tiger_awater',
-         'cb500k_aland', 'cb500k_awater',
-         'cb5m_aland', 'cb5m_awater',
-         'cb20m_aland', 'cb20m_awater']]
+         'rank_c_4pi*a/p^2_tiger', 'rank_c_4pi*a/p^2_500k', 'rank_c_4pi*a/p^2_5m', 'rank_c_4pi*a/p^2_20m',
+         'c_4pi*a/p^2_tiger', 'c_4pi*a/p^2_500k', 'c_4pi*a/p^2_5m', 'c_4pi*a/p^2_20m',
+         'c_perim_tiger', 'c_perim_500k', 'c_perim_5m', 'c_perim_20m',
+         'c_area_tiger', 'c_area_500k', 'c_area_5m', 'c_area_20m'] + rank_land + rank_water + [
+         'aland_tiger', 'awater_tiger',
+         'aland_500k', 'awater_500k',
+         'aland_5m', 'awater_5m',
+         'aland_20m', 'awater_20m']]
+
+df.rename(columns=lambda x: x.replace('c_', 'cont_'), inplace=True)
+df.rename(columns=lambda x: x.replace('4pi*a/p^2', 'pp'), inplace=True)
+print(list(df.columns))
 
 # Write new table to CSV
 df.to_csv("./zoom_table.csv")  
