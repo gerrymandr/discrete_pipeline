@@ -136,6 +136,10 @@ result_nopro.rename(columns=lambda x: x.replace('c', 'cont'), inplace=True)
 result_nopro.rename(columns=lambda x: x.replace('4pi*a/p^2', 'pp'), inplace=True)
 result_nopro.rename(columns=lambda x: x.replace('w_a/p^2', 'disc_w_pp'), inplace=True)
 result_nopro.rename(columns=lambda x: x.replace('a/p^2', 'disc_pp'), inplace=True)
+result_nopro.rename(columns=lambda x: x.replace('area', 'disc_area'), inplace=True)
+result_nopro.rename(columns=lambda x: x.replace('w_disc_area', 'disc_w_area'), inplace=True)
+result_nopro.rename(columns=lambda x: x.replace('perim', 'disc_perim'), inplace=True)
+result_nopro.rename(columns=lambda x: x.replace('w_disc_perim', 'disc_w_perim'), inplace=True)
 
 result_pro.rename(columns=lambda x: x.replace(' (b) ', '_b_'), inplace=True)
 result_pro.rename(columns=lambda x: x.replace(' (g) ', '_g_'), inplace=True)
@@ -144,6 +148,11 @@ result_pro.rename(columns=lambda x: x.replace('c', 'cont'), inplace=True)
 result_pro.rename(columns=lambda x: x.replace('4pi*a/p^2', 'pp'), inplace=True)
 result_pro.rename(columns=lambda x: x.replace('w_a/p^2', 'disc_w_pp'), inplace=True)
 result_pro.rename(columns=lambda x: x.replace('a/p^2', 'disc_pp'), inplace=True)
+result_pro.rename(columns=lambda x: x.replace('area', 'disc_area'), inplace=True)
+result_pro.rename(columns=lambda x: x.replace('w_disc_area', 'disc_w_area'), inplace=True)
+result_pro.rename(columns=lambda x: x.replace('perim', 'disc_perim'), inplace=True)
+result_pro.rename(columns=lambda x: x.replace('w_disc_perim', 'disc_w_perim'), inplace=True)
+
 
 result_nopro.to_csv("./big_table.csv")      # length 54
 result_pro.to_csv("./big_table_pro.csv")    # length 86 because 54+32 for prorated
