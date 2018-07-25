@@ -87,6 +87,8 @@ class ProjectionCalculator:
         """
         Assign appropriate UTM zone for proper projection.
         """
+        # Reproject into lat/long after projection for the intersection
+        self.gdf = self.gdf.to_crs({'init': 'epsg:4269'})
         for index, dist in self.gdf.iterrows():
             utm = math.floor((dist.geometry.centroid.x+180)*59/354)+1
             utm = str(utm).zfill(2)
@@ -107,5 +109,6 @@ class ProjectionCalculator:
             zone["area"] = zone.geometry.area / 1000**2
             zone["perim"] = zone.geometry.length / 1000
             for i, row in zone.iterrows():
-                self.area_dict.update({row["geoid"]: row["area"]})
-                self.perim_dict.update({row["geoid"]: row["perim"]})
+                self.area_dict.update({row["geoid"].iloc[0]: row["area"]})
+                self.perim_dict.update({row["geoid"].iloc[0]: row["perim"]})
+                

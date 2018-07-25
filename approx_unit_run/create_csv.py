@@ -126,18 +126,18 @@ states = sorted(states)
 #        change the third and last argument in compute_measures at the end of this file
 
 # for tigerline
-#dist_df = gpd.GeoDataFrame.from_file("./districting_plans/cd2013/tl_rd13_us_cd113.shp")
+dist_df = gpd.GeoDataFrame.from_file("./districting_plans/cd2013/tl_rd13_us_cd113.shp")
 # zoom level orders: 500k most granular (most precise), then 5m, then 20m (very coarse)
 # for cb500k
 #dist_df = gpd.GeoDataFrame.from_file("./districting_plans/cb_2013_us_cd113_500k/cb_2013_us_cd113_500k.shp")
 # for cb5m
 #dist_df = gpd.GeoDataFrame.from_file("./districting_plans/cb_2013_us_cd113_5m/cb_2013_us_cd113_5m.shp")
 # for cb20m
-dist_df = gpd.GeoDataFrame.from_file("./districting_plans/cb_2013_us_cd113_20m/cb_2013_us_cd113_20m.shp")
+#dist_df = gpd.GeoDataFrame.from_file("./districting_plans/cb_2013_us_cd113_20m/cb_2013_us_cd113_20m.shp")
 
 for i in states:
     print(os.getcwd())
     # the third argument here should be "bg" or "tract"
     # the last argument should be "tigerline","cb500k", "cb5m", or "cb20m"
-    compute_measures(i, dist_df, "bg", "cb20m")
+    compute_measures(i, dist_df, "bg", "tigerline")
     print("done fips: "+i)
