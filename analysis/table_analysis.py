@@ -19,7 +19,7 @@ class PlotData():
     def __init__(self, coords):
         self.coords = coords
         self.ax = axarr[coords]  # coords are the subplot coordinates
-        self.data = merge_table
+        self.data = comp_table
         self.xname = "disc_area_g_0.5" # default x and y
         self.yname = "rank_disc_pp_g_0.5"
         self.x = self.data[self.xname]
@@ -190,10 +190,10 @@ class ColumnInputs():
             plotlist[self.pltnum].set_xname(name)
             
         def input_entry_fields_y():
-            res = tk_res_var_y.get()
-            val = tk_val_var_y.get()
-            unit = tk_unit_var_y.get()
-            thresh = tk_thresh_var_y.get()
+            res = res_y.get()
+            val = val_y.get()
+            unit = unit_y.get()
+            thresh = thresh_y.get()
             rk = ranked_y.get()
             wt = weighted_y.get()
             name = create_col_name(res, unit, val, thresh, rk, wt)
@@ -340,10 +340,11 @@ fips_dict = {}
 for i, row in fips.iterrows():
     fips_dict.update({row["FIP"]: row["STATE"]})
 
-zoom_df = pd.read_csv("zoom_table.csv", dtype={"geoid": str})
-big_df = pd.read_csv("big_table.csv", dtype={"geoid": str})
-merge_table = zoom_df.merge(big_df, left_on="geoid", right_on="geoid")
-geoids = list(merge_table["geoid"])
+# zoom_df = pd.read_csv("zoom_table.csv", dtype={"geoid": str})
+# big_df = pd.read_csv("big_table.csv", dtype={"geoid": str})
+# merge_table = zoom_df.merge(big_df, left_on="geoid", right_on="geoid")
+comp_table = pd.read_csv("comp_table.csv", dtype={"geoid": str})
+geoids = list(comp_table["geoid"])
 
 in1 = ColumnInputs([0.5, 0.05, 0.1, 0.075], 0)
 in2 = ColumnInputs([0.6, 0.05, 0.1, 0.075], 1)
