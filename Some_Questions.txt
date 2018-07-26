@@ -1,5 +1,0 @@
-Some questions:
-
-1. Does proration ever change rankings of PP?
-2. Does changing % inclusion change rankings of PP?
-3. Plot continuous rankings wrt discrete rankings b
