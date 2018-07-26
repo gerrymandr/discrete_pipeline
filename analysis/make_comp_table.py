@@ -29,5 +29,10 @@ for unit in ['g_', 't_']:
                 df["rank_" + pro + "disc_" + weight + "area_" + unit + perc] = df[pro + "disc_" + weight + "area_" + unit + perc].rank(ascending = False)
                 df["rank_" + pro + "disc_" + weight + "perim_" + unit + perc] = df[pro + "disc_" + weight + "perim_" + unit + perc].rank(ascending = False)
 
+for file in ['tiger', '500k', '20m', '5m']:
+    df['rank_cont_area_' + file] = df['cont_area_' + file].rank(ascending = False)
+    df['rank_cont_perim_' + file] = df['cont_perim_' + file].rank(ascending = False)
+
+print(list(df.columns))
 df.to_csv("./comp_table.csv")      # length 54
 print(len(list(df.columns)))
