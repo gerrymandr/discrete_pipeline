@@ -179,10 +179,10 @@ class ColumnInputs():
 
     def input_window(self, event):
         def input_entry_fields_x():
-            res = tk_res_var_x.get()
-            val = tk_val_var_x.get()
-            unit = tk_unit_var_x.get()
-            thresh = tk_thresh_var_x.get()
+            res = res_x.get()
+            val = val_x.get()
+            unit = unit_x.get()
+            thresh = thresh_x.get()
             rk = ranked_x.get()
             wt = weighted_x.get()
             name = create_col_name(res, unit, val, thresh, rk, wt)
@@ -207,78 +207,120 @@ class ColumnInputs():
         mainframe.grid(column=0, row=0, sticky=(tk.N, tk.W, tk.E, tk.S))
         # Dictionary with options
         tk.Label(mainframe, text="SET X PLOT DATA").grid(row=0, column=0)
-
-        tk_res_var_x = tk.StringVar(master)
+        
+        def deactivate_x(*args):
+            if not res_x.get() == "discrete":
+                thresh_menu_x.configure(state="disabled")
+                unit_menu_x.configure(state="disabled")
+                wt_butt_x.configure(state="disabled")
+            if res_x.get() == "discrete":
+                thresh_menu_x.configure(state="active")
+                unit_menu_x.configure(state="active")
+                wt_butt_x.configure(state="active")
+                
+        # discrete vs continuous input
+        res_x = tk.StringVar(master)
         choices = {"discrete", "tiger", "500k", "5m", "20m"}
-        tk_res_var_x.set('discrete')  # set the default option
-        popupMenu = tk.OptionMenu(mainframe, tk_res_var_x, *choices)
+        res_x.set('discrete')  # set the default option
         tk.Label(mainframe, text="Resolution").grid(row=1, column=0)
-        popupMenu.grid(row=2, column=0)
-
-        tk_val_var_x = tk.StringVar(master)
-        choices = {"polsby", "perim", "area"}
-        tk_val_var_x.set("polsby")
-        popupMenu = tk.OptionMenu(mainframe, tk_val_var_x, *choices)
-        tk.Label(mainframe, text="What data?").grid(row=3, column=0)
-        popupMenu.grid(row=4, column=0)
-
-        tk_unit_var_x = tk.StringVar(master)
+        res_menu_x = tk.OptionMenu(mainframe, res_x, *choices)
+        res_menu_x.grid(row=2, column=0)
+        
+        res_x.trace("w", deactivate_x)
+        
+        # unit input (only if res == discrete)
+        unit_x = tk.StringVar(master)
         choices = {"blocks", "block groups", "tracts"}
-        tk_unit_var_x.set("block groups")
-        popupMenu = tk.OptionMenu(mainframe, tk_unit_var_x, *choices)
+        unit_x.set("block groups")
         tk.Label(mainframe, text="Unit").grid(row=1, column=1)
-        popupMenu.grid(row=2, column=1)
+        unit_menu_x = tk.OptionMenu(mainframe, unit_x, *choices)
+        unit_menu_x.grid(row=2, column=1)
 
-        tk_thresh_var_x = tk.StringVar(master)
+        # threshold input (only if res == discrete)
+        thresh_x = tk.StringVar(master)
         choices = {"0.1", "0.5"}
-        tk_thresh_var_x.set("0.5")
-        popupMenu = tk.OptionMenu(mainframe, tk_thresh_var_x, *choices)
+        thresh_x.set("0.5")
         tk.Label(mainframe, text="Threshold").grid(row=3, column=1)
-        popupMenu.grid(row=4, column=1)
+        thresh_menu_x = tk.OptionMenu(mainframe, thresh_x, *choices)
+        thresh_menu_x.grid(row=4, column=1)
+
+        # value input
+        val_x = tk.StringVar(master)
+        choices = {"polsby", "perim", "area"}
+        val_x.set("polsby")
+        tk.Label(mainframe, text="What data?").grid(row=3, column=0)
+        val_menu_x = tk.OptionMenu(mainframe, val_x, *choices)
+        val_menu_x.grid(row=4, column=0)
 
         ranked_x = tk.IntVar()
-        tk.Checkbutton(mainframe, text="ranked",
-                       variable=ranked_x).grid(row=5, column=0)
+        ranked_butt_x = tk.Checkbutton(mainframe, text="ranked",
+                                       variable=ranked_x)
+        ranked_butt_x.grid(row=5, column=0)
+
+        # pop weighted and prorate buttons (only if res == discrete)
         weighted_x = tk.IntVar()
-        tk.Checkbutton(mainframe, text="pop weighted",
-                       variable=weighted_x).grid(row=5, column=1)
+        wt_butt_x = tk.Checkbutton(mainframe, text="pop weighted",
+                                   variable=weighted_x)
+        wt_butt_x.grid(row=5, column=1)
+        
 
         # adding buttons for y axis
-        tk.Label(mainframe, text="SET Y PLOT DATA").grid(row=0, column=2)
-        tk_res_var_y = tk.StringVar(master)
+        tk.Label(mainframe, text="SET X PLOT DATA").grid(row=0, column=0)
+        
+        def deactivate_y(*args):
+            if not res_y.get() == "discrete":
+                thresh_menu_y.configure(state="disabled")
+                unit_menu_y.configure(state="disabled")
+                wt_butt_y.configure(state="disabled")
+            if res_y.get() == "discrete":
+                thresh_menu_y.configure(state="active")
+                unit_menu_y.configure(state="active")
+                wt_butt_y.configure(state="active")
+                
+        # discrete vs continuous input
+        res_y = tk.StringVar(master)
         choices = {"discrete", "tiger", "500k", "5m", "20m"}
-        tk_res_var_y.set('discrete')
-        popupMenu = tk.OptionMenu(mainframe, tk_res_var_y, *choices)
+        res_y.set('discrete')  # set the default option
         tk.Label(mainframe, text="Resolution").grid(row=1, column=2)
-        popupMenu.grid(row=2, column=2)
-
-        tk_val_var_y = tk.StringVar(master)
-        choices = {"polsby", "perim", "area"}
-        tk_val_var_y.set("polsby")
-        popupMenu = tk.OptionMenu(mainframe, tk_val_var_y, *choices)
-        tk.Label(mainframe, text="What data?").grid(row=3, column=2)
-        popupMenu.grid(row=4, column=2)
-
-        tk_unit_var_y = tk.StringVar(master)
+        res_menu_y = tk.OptionMenu(mainframe, res_y, *choices)
+        res_menu_y.grid(row=2, column=2)
+        
+        res_y.trace("w", deactivate_y)
+        
+        # unit input (only if res == discrete)
+        unit_y = tk.StringVar(master)
         choices = {"blocks", "block groups", "tracts"}
-        tk_unit_var_y.set("block groups")
-        popupMenu = tk.OptionMenu(mainframe, tk_unit_var_y, *choices)
+        unit_y.set("block groups")
         tk.Label(mainframe, text="Unit").grid(row=1, column=3)
-        popupMenu.grid(row=2, column=3)
+        unit_menu_y = tk.OptionMenu(mainframe, unit_y, *choices)
+        unit_menu_y.grid(row=2, column=3)
 
-        tk_thresh_var_y = tk.StringVar(master)
+        # threshold input (only if res == discrete)
+        thresh_y = tk.StringVar(master)
         choices = {"0.1", "0.5"}
-        tk_thresh_var_y.set("0.5")
-        popupMenu = tk.OptionMenu(mainframe, tk_thresh_var_y, *choices)
+        thresh_y.set("0.5")
         tk.Label(mainframe, text="Threshold").grid(row=3, column=3)
-        popupMenu.grid(row=4, column=3)
+        thresh_menu_y = tk.OptionMenu(mainframe, thresh_y, *choices)
+        thresh_menu_y.grid(row=4, column=3)
+
+        # value input
+        val_y = tk.StringVar(master)
+        choices = {"polsby", "perim", "area"}
+        val_y.set("polsby")
+        tk.Label(mainframe, text="What data?").grid(row=3, column=2)
+        val_menu_y = tk.OptionMenu(mainframe, val_y, *choices)
+        val_menu_y.grid(row=4, column=2)
 
         ranked_y = tk.IntVar()
-        tk.Checkbutton(mainframe, text="ranked",
-                       variable=ranked_y).grid(row=5, column=2)
+        ranked_butt_y = tk.Checkbutton(mainframe, text="ranked",
+                                       variable=ranked_y)
+        ranked_butt_y.grid(row=5, column=2)
+
+        # pop weighted and prorate buttons (only if res == discrete)
         weighted_y = tk.IntVar()
-        tk.Checkbutton(mainframe, text="pop weighted",
-                       variable=weighted_y).grid(row=5, column=3)
+        wt_butt_y = tk.Checkbutton(mainframe, text="pop weighted",
+                                   variable=weighted_y)
+        wt_butt_y.grid(row=5, column=3)
 
         showbuttonx = tk.Button(mainframe, text='Input x name',
                                command=input_entry_fields_x)
