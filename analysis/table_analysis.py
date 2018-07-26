@@ -323,11 +323,11 @@ class ColumnInputs():
         wt_butt_y.grid(row=5, column=3)
 
         showbuttonx = tk.Button(mainframe, text='Input x name',
-                               command=input_entry_fields_x)
+                                command=input_entry_fields_x)
         showbuttonx.grid(row=6, column=1, sticky=tk.W, pady=4)
-        
+
         showbuttony = tk.Button(mainframe, text='Input y name',
-                               command=input_entry_fields_y)
+                                command=input_entry_fields_y)
         showbuttony.grid(row=6, column=3, sticky=tk.W, pady=4)
         tk.mainloop()
 
