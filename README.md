@@ -1,5 +1,5 @@
 # discrete_pipeline
-Building the pipeline to harvest discrete compactness measures.
+Building the pipeline to harvest discrete compactness measures. To go straight to our results, navigate to tables_and_figures/Tables. 
 
 ## data_assembly
 Contains the code that did the heavy lifting. It collects data from the Census API and computes discrete measures for census blocks, block groups, and tracts. The directory it split into approx_unit_run/ and discrete_blocks_run/. approx_unit_run/ computes these measures for block groups and tracts and discrete_blocks_run/ does so for blocks. 
