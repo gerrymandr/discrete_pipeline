@@ -194,9 +194,12 @@ coast_list = ['1702', '2403', '1701', '3601', '3403', '5104', '0624', '1223', '2
 
 names =[]
 
-names.append(["rank_disc_pp_g_0.1","rank_disc_pp_g_0.1"])
-names.append(["rank_disc_pp_g_0.1","rank_disc_pp_g_0.1"])
-names.append(["rank_disc_pp_g_0.1","rank_disc_pp_g_0.1"])
+# Order is top left, top right, bottom left
+# names.append([x, y])
+# template exs: rank_disc_w_pp_g_0.1_pro, rank_tiger_perim_b_0.1
+names.append(["rank_disc_pp_g_0.5","rank_disc_w_pp_g_0.5"])
+names.append(["rank_disc_pp_b_0.5","rank_disc_w_pp_g_0.5"])
+names.append(["rank_disc_pp_g_0.5_pro","rank_disc_pp_g_0.5_pro"])
 
 plotlist = []
 for i in range(3):

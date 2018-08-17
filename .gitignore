@@ -1,2 +1,5 @@
 Scripts
 .DS_Store
+/analysis/.DS_Store
+/analysis/stylized/*.xlsx
+/approx_unit_run/.create_csv.py.swp

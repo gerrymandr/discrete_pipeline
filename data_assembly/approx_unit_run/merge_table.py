@@ -1,7 +1,6 @@
 import math
 import pandas as pd
 import glob
-import matplotlib.pyplot as plt
 '''Takes all of the files in ./tables/ and merges them into a csv, removing the headers, the only water districts, and saves new csv'''
 
 unit_name = ["tract", "bg"]
@@ -18,7 +17,7 @@ for unit in unit_name:
         tf = [not row['geoid'][2:] == 'ZZ' for i, row in df.iterrows()]
         df = df[tf]
         df = df.reset_index(drop=True)
-        
+
         # Removing DC
         tf_dc = [not row['geoid'][:2] == '11' for i, row in df.iterrows()]
         df = df[tf_dc]

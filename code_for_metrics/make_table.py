@@ -140,6 +140,7 @@ result_nopro.rename(columns=lambda x: x.replace('area', 'disc_area'), inplace=Tr
 result_nopro.rename(columns=lambda x: x.replace('w_disc_area', 'disc_w_area'), inplace=True)
 result_nopro.rename(columns=lambda x: x.replace('perim', 'disc_perim'), inplace=True)
 result_nopro.rename(columns=lambda x: x.replace('w_disc_perim', 'disc_w_perim'), inplace=True)
+result_nopro = result_nopro.rename(columns={'cont_disc_perim': 'cont_perim', 'cont_disc_area': 'cont_area'})
 
 result_pro.rename(columns=lambda x: x.replace(' (b) ', '_b_'), inplace=True)
 result_pro.rename(columns=lambda x: x.replace(' (g) ', '_g_'), inplace=True)
@@ -152,6 +153,8 @@ result_pro.rename(columns=lambda x: x.replace('area', 'disc_area'), inplace=True
 result_pro.rename(columns=lambda x: x.replace('w_disc_area', 'disc_w_area'), inplace=True)
 result_pro.rename(columns=lambda x: x.replace('perim', 'disc_perim'), inplace=True)
 result_pro.rename(columns=lambda x: x.replace('w_disc_perim', 'disc_w_perim'), inplace=True)
+result_pro = result_pro.rename(columns={'cont_disc_perim': 'cont_perim', 'cont_disc_area': 'cont_area'})
+
 
 
 result_nopro.to_csv("./big_table.csv")      # length 54

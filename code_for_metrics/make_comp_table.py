@@ -6,6 +6,7 @@ Created on Wed Jul 25 16:50:29 2018
 @author: adrianarogers
 """
 import pandas as pd
+import geopandas as gpd
 
 df = pd.read_csv("big_table_pro.csv", dtype={"geoid": str})
 zoom = pd.read_csv("zoom_table.csv", dtype={"geoid": str})
@@ -36,3 +37,11 @@ for file in ['tiger', '500k', '20m', '5m']:
 print(list(df.columns))
 df.to_csv("./comp_table.csv")      # length 54
 print(len(list(df.columns)))
+
+
+#coast = gpd.GeoDataFrame.from_file("../approx_unit_run/districting_plans/500k_coastal_districts_only.shp")
+#coast_geoids = list(coast['GEOID'])
+#print(coast_geoids)
+#
+#with open("coast_geoids.txt", "w") as output:
+#    output.write(str(coast_geoids))
